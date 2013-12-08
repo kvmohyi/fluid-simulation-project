@@ -156,23 +156,25 @@ void drawTest(int dimension, int version){
 	if(dimension == 2)
 	{
 		if(version == 1){
-			drawWaterShape(num_particles, xStart, yStart, 0, xEnd, yEnd, 0);
+		  drawWaterShape(num_particles, xStart, yStart, 0, xEnd, yEnd, 0);//just one water cube in 2D
 		}
+		/*
 		else 
 		{
-			drawWaterShape(400, xStart, yStart, 0, -1, -1, 0);
-			drawWaterShape(num_particles - 400, xStart2, yStart2, 0, xEnd2, yEnd2, 0);
-		}
+		        drawWaterShape(num_particles * .2, xStart, yStart, 0, xEnd, yEnd, 0);// dropping a cube into a body of water
+			drawWaterShape(num_particles * .8, -1, -1, 0, 1, 1, 0);
+			}*/
 	}
 	else
 	{
 		if(version == 1){
 			drawWaterShape(num_particles, xStart, yStart, zStart, xEnd, yEnd, zEnd);
 		}
+		/*
 		else {
-			drawWaterShape(400, xStart, yStart, zStart, xEnd, yEnd, zEnd);
-			drawWaterShape(num_particles - 400, xStart2, yStart2, zStart2, xEnd2, yEnd2, zEnd2);
-		}
+			drawWaterShape(num_particles * .2, xStart, yStart, zStart, xEnd, yEnd, zEnd);
+			drawWaterShape(num_particles * .8,-1, -1, -1, 1, 1, 1);
+			}*/
 	} 
 	
 }
