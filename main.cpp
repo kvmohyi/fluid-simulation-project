@@ -1,10 +1,8 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
-#include <sstream>
 #include <cmath>
-#include <utility>
-#include "Eigen/Eigen"
+
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -22,102 +20,131 @@
 #include <time.h>
 #include <math.h>
 
-
-#define PI 3.14159265  // Should be used from mathlib
-inline float sqr(float x) { return x*x; }
+#ifdef _WIN32
+static DWORD lastTime;
+#else
+static struct timeval lastTime;
+#endif
 
 using namespace std;
-using namespace Eigen;
+
+//****************************************************
+// Some Classes
+//****************************************************
+class Viewport {
+  public:
+    int w, h; // width and height
+};
 
 
-void loadScene(std::string file) {
+//****************************************************
+// Global Variables
+//****************************************************
+Viewport viewport;
+FluidSimulation* fluidsim = NULL;
 
-  //store variables and set stuff at the end
-  int num_grids, radius, num_particles;
-  float step_size, volume, density, viscosity, gas_constant;
-  Vector3f particle;
-  Vector3f gravity;
-  std::string fname = "output.bmp";
+//****************************************************
+// reshape viewport if the window is resized
+//****************************************************
+void myReshape(int w, int h) {
+  viewport.w = w;
+  viewport.h = h;
 
-  std::ifstream inpfile(file.c_str());
-  if(!inpfile.is_open()) {
-    std::cout << "Unable to open file" << std::endl;
-  } else {
-    std::string line;
-    //MatrixStack mst;
+  glViewport(0,0,viewport.w,viewport.h);// sets the rectangle that will be the window
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();                // loading the identity matrix for the screen
 
-    while(inpfile.good()) {
-      std::vector<std::string> splitline;
-      std::string buf;
+  //----------- setting the projection -------------------------
+  // glOrtho sets left, right, bottom, top, zNear, zFar of the chord system
 
-      std::getline(inpfile,line);
-      std::stringstream ss(line);
 
-      while (ss >> buf) {
-        splitline.push_back(buf);
-      }
-      //Ignore blank lines
-      if(splitline.size() == 0) {
-        continue;
-      }
+  // glOrtho(-1, 1 + (w-400)/200.0 , -1 -(h-400)/200.0, 1, 1, -1); // resize type = add
+  // glOrtho(-w/400.0, w/400.0, -h/400.0, h/400.0, 1, -1); // resize type = center
 
-      //Ignore comments
-      if(splitline[0][0] == '#') {
-        continue;
-      }
+  glOrtho(-1, 1, -1, 1, 1, -1);    // resize type = stretch
 
-      //Valid commands:
-      //size width height
-      //  must be first command of file, controls image size
-      else if(!splitline[0].compare("step_size")) {
-        step_size = atof(splitline[1]);
-      }
-      //maxdepth depth
-      //  max # of bounces for ray (default 5)
-      else if(!splitline[0].compare("num_grids")) {
-        num_grids = atoi(splitline[1]);
-      }
-      //output filename
-      //  output file to write image to 
-      else if(!splitline[0].compare("radius")) {
-        radius = atoi(splitline[1]);
-      }
-      else if(!splitline[0].compare("num_particles")) {
-        radius = atoi(splitline[1]);
-      }
-      else if(!splitline[0].compare("volume")) {
-        volume = atof(splitline[1]);
-      }
-      else if(!splitline[0].compare("density")) {
-        density = atof(splitline[1]);
-      }
-      else if(!splitline[0].compare("viscosity")) {
-        viscosity = atoi(splitline[1]);
-      }
-      else if(!splitline[0].compare("gas_constant")) {
-        gas_constant = atoi(splitline[1]);
-      }
-      else if(!splitline[0].compare("radius")) {
-        radius = atoi(splitline[1]);
-      }
-      else if(!splitline[0].compare("gravity")) {
-        gravity = new Vector3f(atof(splitline[1]), atof(splitline[2]), atof(splitline[3]));
-      }
-      else if(!splitline[0].compare("particle")) {
-        particle = new Vector3f(atof(splitline[1]), atof(splitline[2]), atof(splitline[3]));
-      }
-    }
-    inpfile.close();
-  }
+  //------------------------------------------------------------
 }
 
-int main(int argc, char* argv[]){
+
+//****************************************************
+// sets the window up
+//****************************************************
+void initScene(){
+  glClearColor(0.0f, 0.0f, 0.0f, 0.0f); // Clear to black, fully transparent
+
+  myReshape(viewport.w,viewport.h);
+}
+
+
+//***************************************************
+// function that does the actual drawing
+//***************************************************
+void myDisplay() {
+  glClear(GL_COLOR_BUFFER_BIT);
+
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+
+  glColor3f(0.0f,0.0f,1.0f);
+
+  vector<Particle>& particles = fluidsim.particles();
+  size_t numParticles = particles.size();
+
+  for (size_t i = 0; i < numParticles; i++) {
+    glPushMatrix();
+      glTranslatef(particles[i].position.x, particles[i].position.y, particles[i].position.z);
+      glutSolidSphere(0.05, 20, 20);
+    glPopMatrix();
+  }
+
+  glFlush();
+  glutSwapBuffers();
+
+  fluidsim.elapseTimeNaive();
+}
+
+
+//****************************************************
+// called by glut when there are no messages to handle
+//****************************************************
+void myFrameMove() {
+  //nothing here for now
+#ifdef _WIN32
+  Sleep(10);                                   //give ~10ms back to OS (so as not to waste the CPU)
+#endif
+  glutPostRedisplay(); // forces glut to call the display function (myDisplay())
+}
+
+
+//****************************************************
+// the usual stuff, nothing exciting here
+//****************************************************
+int main(int argc, char *argv[]) {
+  string file = argv[1];
+  fluidsim = new FluidSimulation(file);
+
+  //This initializes glut
+  glutInit(&argc, argv);
+
+  //This tells glut to use a double-buffered window with red, green, and blue channels 
+  glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
+
+  // Initalize theviewport size
+  viewport.w = 400;
+  viewport.h = 400;
+
+  //The size and position of the window
+  glutInitWindowSize(viewport.w, viewport.h);
+  glutInitWindowPosition(0, 0);
+  glutCreateWindow("Fluid Simulation");
+
+  initScene();                                 // quick function to set up scene
+
+  glutDisplayFunc(myDisplay);                  // function to run when its time to draw something
+  glutReshapeFunc(myReshape);                  // function to run when the window gets resized
+  glutIdleFunc(myFrameMove);                   // function to run when not handling any other task
+  glutMainLoop();                              // infinite loop that will keep drawing and resizing and whatever else
+
   return 0;
 }
-
-
-
-
-
-
-

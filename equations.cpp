@@ -6,23 +6,10 @@
 #include <utility>
 #include <glm/glm.hpp>
 
-#include 'simulations.cpp'
-
-#define PI 3.14159265  
+#include "geometry.cpp"
 
 using namespace std;
 using namespace glm;
-
-
-float sqr(float x);
-float distance(Particle particle, Particle other);
-float gaussian_smoothing(Particle particle, Particle other);
-vec3 gradient_gaussian_smoothing(Particle particle, Particle other);
-vec3 gradient_gaussian_smoothing(Particle particle, Particle other);
-float density(Particle particle);
-vec3 pressure(Particle particle);
-vec3 force_pressure(Particle particle, Particle other);
-vec3 force_viscosity(Particle particle, Particle other);
 
 float sqr(float x){
   return x * x;
@@ -71,7 +58,7 @@ vec3 gradient2_gaussian_smoothing(Particle particle, Particle other){
 	
 vec3 force_pressure(Particle particle, Particle other) {
 	float avgPressure = (particle.pressure + other.pressure) / 2.0;
-	avgPressure = avgPressure * other.mass / other.mass_density;
+	avgPressure = avgPressure * other.mass / other.massDensity;
 	vec3 force = gradient_gaussian_smoothing(particle, other);
 	force = force * avgPressure;
 	return force;
@@ -79,7 +66,7 @@ vec3 force_pressure(Particle particle, Particle other) {
 
 vec3 force_viscosity(Particle particle, Particle other) {
 	float diffVelocity = other.velocity - particle.velocity;
-	diffVelocity = diffVelocity * other.mass / other.mass_density;
+	diffVelocity = diffVelocity * other.mass / other.massDensity;
 	vec3 force = gradient2_gaussian_smoothing(particle, other);
 	force = force * diffVelocity;
 	return force;
