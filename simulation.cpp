@@ -61,6 +61,9 @@ void FluidSimulation::instantiateFromFile(string file) {
 			else if(!splitline[0].compare("volume")) {
 				volume = atof(splitline[1].c_str());
 			}
+			else if(!splitline[0].compare("mass")) {
+				particleMass = atof(splitline[1].c_str());
+			}
 			else if(!splitline[0].compare("rest_density")) {
 				restDensity = atof(splitline[1].c_str());
 			}
@@ -76,8 +79,6 @@ void FluidSimulation::instantiateFromFile(string file) {
 		}
 		inpfile.close();
 	}
-
-	particleMass = restDensity * volume / numParticles;
 }
 
 FluidSimulation::FluidSimulation(string file) {
@@ -92,7 +93,7 @@ void FluidSimulation::elapseTimeNaive() {
 
 		for (size_t j = 0; j < particles.size(); j++) {
 			Particle& other = particles[j];
-			current.massDensity += other.massDensity * gaussian_smoothing(current, other);
+			current.massDensity += other.mass * gaussian_smoothing(current, other);
 		}
 
 		current.pressure = gasConstant * (pow(current.massDensity * current.mass / restDensity, 7.0f) - 1.0f);

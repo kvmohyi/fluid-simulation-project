@@ -8,7 +8,5 @@ using namespace std;
 using namespace glm;
 
 bool RigidBody::collision(vec3 start, vec3 end) {
-
+	return false;
 }
-
-int main(){}

@@ -21,7 +21,6 @@ private:
 	int localRadius;
 	float viscosityConstant;
 	float gasConstant;
-	float particleMass;
 	float restDensity;
 
 	void instantiateFromFile(string file);
