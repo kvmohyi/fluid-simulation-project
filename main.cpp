@@ -20,6 +20,8 @@
 #include <time.h>
 #include <math.h>
 
+#include "simulation.hpp"
+
 #ifdef _WIN32
 static DWORD lastTime;
 #else
@@ -88,7 +90,7 @@ void myDisplay2D() {
 
   glColor3f(0.0f,0.0f,1.0f);
 
-  vector<Particle>& particles = fluidsim.particleList();
+  vector<Particle>& particles = fluidsim->particleList();
 
   for (size_t i = 0; i < particles.size(); i++) {
     glPushMatrix();
@@ -100,7 +102,7 @@ void myDisplay2D() {
   glFlush();
   glutSwapBuffers();
 
-  fluidsim.elapseTimeNaive();
+  fluidsim->elapseTimeGrid();
 }
 
 

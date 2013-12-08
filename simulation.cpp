@@ -33,13 +33,6 @@ void FluidSimulation::instantiateFromFile(string file) {
 			if(splitline.size() == 0) {
 				continue;
 			}
-			else if(!splitline[0].compare("particle")) {
-
-				// jonathan pls fix
-
-				/*Particle particle = vec3(atof(splitline[1].c_str()), atof(splitline[2].c_str()), atof(splitline[3].c_str()));
-				particles.push_back(particle);*/
-			}
 			else if(splitline[0][0] == '#') {
 				continue;
 			}
@@ -49,17 +42,17 @@ void FluidSimulation::instantiateFromFile(string file) {
 			else if(!splitline[0].compare("num_grids")) {
 				numGrids = atoi(splitline[1].c_str());
 			}
+			else if(!splitline[0].compare("grid_size")) {
+				gridSize = atoi(splitline[1].c_str());
+			}
 			else if(!splitline[0].compare("radius")) {
 				localRadius = atoi(splitline[1].c_str());
 			}
+			else if(!splitline[0].compare("world_size")) {
+				worldSize = atoi(splitline[1].c_str());
+			}
 			else if(!splitline[0].compare("num_particles")) {
 				numParticles = atoi(splitline[1].c_str());
-			}
-			else if(!splitline[0].compare("volume")) {
-				volume = atof(splitline[1].c_str());
-			}
-			else if(!splitline[0].compare("mass")) {
-				particleMass = atof(splitline[1].c_str());
 			}
 			else if(!splitline[0].compare("rest_density")) {
 				restDensity = atof(splitline[1].c_str());
@@ -70,9 +63,6 @@ void FluidSimulation::instantiateFromFile(string file) {
 			else if(!splitline[0].compare("gas_constant")) {
 				gasConstant = atoi(splitline[1].c_str());
 			}
-			else if(!splitline[0].compare("gravity")) {
-				gravity = vec3(atof(splitline[1].c_str()), atof(splitline[2].c_str()), atof(splitline[3].c_str()));
-			}
 		}
 		inpfile.close();
 	}
@@ -82,57 +72,80 @@ FluidSimulation::FluidSimulation(string file) {
 	instantiateFromFile(file);
 }
 
-void FluidSimulation::elapseTimeNaive() {
+void FluidSimulation::elapseTimeGrid() {
 	// Compute the density and pressure of each particle
-	for (size_t i = 0; i < particles.size(); i++) {
-		Particle& current = particles[i];
-		current.massDensity = 0.0f;
+	for (size_t  i_cell = 0; i_cell < gridCells.size(); i_cell++) {
+		for (size_t i = 0; i < gridCells[i_cell].size(); i++) {
+			Particle& current = gridCells[i_cell][i];
+			current.massDensity = 0.0f;
 
-		for (size_t j = 0; j < particles.size(); j++) {
-			Particle& other = particles[j];
-			current.massDensity += particleMass * gaussian_smoothing(current, other);
+			for (size_t  j_cell = 0; j_cell < gridCells.size(); j_cell++) {
+				for (size_t j = 0; j < gridCells[j_cell].size(); j++) {
+					Particle& other = gridCells[j_cell][j];
+					current.massDensity += particleMass * gaussian_smoothing(current, other);
+				}
+			}
+
+			current.pressure = gasConstant * (pow(current.massDensity * particleMass / restDensity, 7.0f) - 1.0f);
 		}
-
-		current.pressure = gasConstant * (pow(current.massDensity * particleMass / restDensity, 7.0f) - 1.0f);
 	}
 
 	// Update the position, velocity, and acceleration for each particle to the next time step
 	// using leapfrog integration
-	for (size_t i = 0; i < particles.size(); i++) {
-		Particle& current = particles[i];
-		vec3 force;
-		vec3 newPosition; // Position at t+1
-		vec3 newAcceleration; // Acceleration at t+1
+	for (size_t  i_cell = 0; i_cell < gridCells.size(); i_cell++) {
+		for (size_t i = 0; i < gridCells[i_cell].size(); i++) {
+			Particle& current = gridCells[i_cell][i];
+			vec3 force;
+			vec3 newPosition; // Position at t+1
+			vec3 newAcceleration; // Acceleration at t+1
 
-		// Advance position to time t+1
-		// x_i+1 = x_i + v_i * delta_t + 0.5 * a_i * delta_t ^ 2
-		newPosition = current.position + current.velocity * timeStepSize + 0.5f * current.acceleration + pow(timeStepSize, 2.0f);
-		current.position = newPosition;
+			// Advance position to time t+1
+			// x_i+1 = x_i + v_i * delta_t + 0.5 * a_i * delta_t ^ 2
+			newPosition = current.position + current.velocity * timeStepSize + 0.5f * current.acceleration + pow(timeStepSize, 2.0f);
+			current.position = newPosition;
 
-		// Force from gravity
-		force = current.massDensity * gravity;
+			// Force from gravity
+			force = current.massDensity * gravity;
 
-		for (size_t j = 0; j < particles.size(); j++) {
-			Particle& other = particles[j];
+			for (size_t  j_cell = 0; j_cell < gridCells.size(); j_cell++) {
+				for (size_t j = 0; j < gridCells[i_cell].size(); j++) {
+					Particle& other = gridCells[j_cell][j];
+					// Force from pressure
+					force = force - force_pressure(current, other);
+					// Force from viscosity
+					force = force + viscosityConstant * force_viscosity(current, other);
+				}
+			}
 
-			// Force from pressure
-			force = force - force_pressure(current, other);
+			newAcceleration = force / current.massDensity;
 
-			// Force from viscosity
-			force = force + viscosityConstant * force_viscosity(current, other);
+			// Advance velocity to time t+1
+			// v_i+1 = v_i + 0.5 * (a_i + a_i+1) * delta_t
+			current.velocity = current.velocity + 0.5f * (current.acceleration + newAcceleration) * timeStepSize;
+
+			// Advance acceleration to time t+1
+			current.acceleration = newAcceleration;
 		}
-
-		newAcceleration = force / current.massDensity;
-
-		// Advance velocity to time t+1
-		// v_i+1 = v_i + 0.5 * (a_i + a_i+1) * delta_t
-		current.velocity = current.velocity + 0.5f * (current.acceleration + newAcceleration) * timeStepSize;
-
-		// Advance acceleration to time t+1
-		current.acceleration = newAcceleration;	
 	}
 }
 
 vector<Particle>& FluidSimulation::particleList() {
-	return particles;
+	vector<Particle> asdf;
+	return asdf;
+}
+
+int FluidSimulation::mapToBucket(Particle particle) {
+	int x_bucket = (worldSize / 2 + particle.position.x) / worldSize * numGrids;
+	int y_bucket = (worldSize / 2 + particle.position.y) / worldSize * numGrids;
+	int z_bucket = (worldSize / 2 + particle.position.z) / worldSize * numGrids;
+
+	return x_bucket + numGrids * (y_bucket + numGrids * z_bucket);
+}
+
+int FluidSimulation::mapToBucket(Particle particle, int x_offset, int y_offset, int z_offset) {
+	int x_bucket = x_offset + (worldSize / 2 + particle.position.x) / worldSize * numGrids;
+	int y_bucket = y_offset + (worldSize / 2 + particle.position.y) / worldSize * numGrids;
+	int z_bucket = z_offset + (worldSize / 2 + particle.position.z) / worldSize * numGrids;
+
+	return x_bucket + numGrids * (y_bucket + numGrids * z_bucket);
 }
