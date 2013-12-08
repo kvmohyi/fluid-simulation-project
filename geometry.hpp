@@ -10,7 +10,6 @@ using namespace glm;
 
 class Particle {
 public:
-	float mass;
 	float massDensity;
 	float pressure;
 	vec3 position;

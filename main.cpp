@@ -80,7 +80,7 @@ void initScene(){
 //***************************************************
 // function that does the actual drawing
 //***************************************************
-void myDisplay() {
+void myDisplay2D() {
   glClear(GL_COLOR_BUFFER_BIT);
 
   glMatrixMode(GL_MODELVIEW);
@@ -88,10 +88,9 @@ void myDisplay() {
 
   glColor3f(0.0f,0.0f,1.0f);
 
-  vector<Particle>& particles = fluidsim.particles();
-  size_t numParticles = particles.size();
+  vector<Particle>& particles = fluidsim.particleList();
 
-  for (size_t i = 0; i < numParticles; i++) {
+  for (size_t i = 0; i < particles.size(); i++) {
     glPushMatrix();
       glTranslatef(particles[i].position.x, particles[i].position.y, particles[i].position.z);
       glutSolidSphere(0.05, 20, 20);
@@ -141,7 +140,7 @@ int main(int argc, char *argv[]) {
 
   initScene();                                 // quick function to set up scene
 
-  glutDisplayFunc(myDisplay);                  // function to run when its time to draw something
+  glutDisplayFunc(myDisplay2D);                  // function to run when its time to draw something
   glutReshapeFunc(myReshape);                  // function to run when the window gets resized
   glutIdleFunc(myFrameMove);                   // function to run when not handling any other task
   glutMainLoop();                              // infinite loop that will keep drawing and resizing and whatever else

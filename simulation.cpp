@@ -13,9 +13,6 @@ using namespace std;
 using namespace glm;
 
 void FluidSimulation::instantiateFromFile(string file) {
-	int numParticles;
-	float volume;
-
 	std::ifstream inpfile(file.c_str());
 	if(!inpfile.is_open()) {
 		std::cout << "Unable to open file" << std::endl;
@@ -93,10 +90,10 @@ void FluidSimulation::elapseTimeNaive() {
 
 		for (size_t j = 0; j < particles.size(); j++) {
 			Particle& other = particles[j];
-			current.massDensity += other.mass * gaussian_smoothing(current, other);
+			current.massDensity += particleMass * gaussian_smoothing(current, other);
 		}
 
-		current.pressure = gasConstant * (pow(current.massDensity * current.mass / restDensity, 7.0f) - 1.0f);
+		current.pressure = gasConstant * (pow(current.massDensity * particleMass / restDensity, 7.0f) - 1.0f);
 	}
 
 	// Update the position, velocity, and acceleration for each particle to the next time step

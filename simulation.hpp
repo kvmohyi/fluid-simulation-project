@@ -12,16 +12,20 @@ using namespace glm;
 
 class FluidSimulation {
 private:
-	vector<Particle> particles;
+	vector<Vector<Particle> > buckets;
 	vector<RigidBody> rigidBodies;
 
 	vec3 gravity;
 	float timeStepSize;
 	int numGrids;
-	int localRadius;
+	int numParticles;
+	float gridSize;
+	float localRadius;
+	float volume;
 	float viscosityConstant;
 	float gasConstant;
 	float restDensity;
+	float particleMass;
 
 	void instantiateFromFile(string file);
 
