@@ -84,46 +84,52 @@ FluidSimulation::FluidSimulation(string file) {
 }
 
 void FluidSimulation::elapseTimeGrid() {
-	// Compute the density and pressure of each particle
+	vector<vector<Particle> > newGridCells(numGrids * numGrids * numGrids);
+	// Compute the density and pressure at each particle
 	for (size_t  i_cell = 0; i_cell < gridCells.size(); i_cell++) {
 		for (size_t i = 0; i < gridCells[i_cell].size(); i++) {
 			Particle& current = gridCells[i_cell][i];
-			current.massDensity = 0.0f;
+			current.density = 0.0f;
 
 			for (size_t  j_cell = 0; j_cell < gridCells.size(); j_cell++) {
 				for (size_t j = 0; j < gridCells[j_cell].size(); j++) {
 					Particle& other = gridCells[j_cell][j];
-					current.massDensity += particleMass * gaussian_smoothing(current, other);
+					current.density += gaussian_smoothing(current, other);
 				}
 			}
 
-			current.pressure = gasConstant * (pow(current.massDensity * particleMass / restDensity, 7.0f) - 1.0f);
+			current.density *= particleMass;
+
+			//current.pressure = gasConstant * (pow(current.massDensity * particleMass / restDensity, 7.0f) - 1.0f);
+
+			// 2250000 is the speed of sound squared.
+			current.pressure = 2250000.0f * (current.density - restDensity);
 		}
 	}
 
 	// Update the position, velocity, and acceleration for each particle to the next time step
-	// using leapfrog integration
 	for (size_t  i_cell = 0; i_cell < gridCells.size(); i_cell++) {
 		for (size_t i = 0; i < gridCells[i_cell].size(); i++) {
 			Particle& current = gridCells[i_cell][i];
-			vec3 force;
+			vec3 pressureForce(0.0f, 0.0f, 0.0f);
+			vec3 viscosityForce(0.0f, 0.0f, 0.0f);
 			vec3 newPosition; // Position at t+1
 			vec3 newAcceleration; // Acceleration at t+1
 
-			// Advance position to time t+1
+			// Advance position to time t+1 using leapfrog integration
 			// x_i+1 = x_i + v_i * delta_t + 0.5 * a_i * delta_t ^ 2
 			newPosition = current.position + current.velocity * timeStepSize + 0.5f * current.acceleration + pow(timeStepSize, 2.0f);
-			current.position = newPosition;
 
-			// Force from gravity
-			force = current.massDensity * gravity;
+			// Do collision detection here
+
+			current.position = newPosition;
 
 			int offsets[] = {-1, 1};
 
 			for (int x_offset = 0; x_offset < 2; x_offset++) {
 				for (int y_offset = 0; y_offset < 2; y_offset++) {
 					for (int z_offset = 0; z_offset < 2; z_offset++) {
-						int index = mapToIndex(offsets[x_offset], offsets[y_offset], offsets[z_offset]);
+						int index = mapToIndex(i_cell + offsets[x_offset], i_cell + offsets[y_offset], i_cell + offsets[z_offset]);
 						// If the cell is out of bounds, then ignore it
 						if (index < 0 || index >= gridCells.size())
 							continue;
@@ -131,28 +137,33 @@ void FluidSimulation::elapseTimeGrid() {
 						for (size_t j = 0; j < gridCells[index].size(); j++) {
 							Particle& other = gridCells[index][j];
 							// Force from pressure
-							force = force - force_pressure(current, other, particleMass);
+							pressureForce += pressureForcePartial(current, other);
 							// Force from viscosity
-							force = force + viscosityConstant * force_viscosity(current, other, particleMass);
+							viscosityForce += viscosityForcePartial(current, other);
 						}
 					}
 				}
 			}
 
-			for (size_t  j_cell = 0; j_cell < gridCells.size(); j_cell++) {
-				
-			}
+			pressureForce *= particleMass;
+			viscosityForce *= viscosityConstant * particleMass;
 
-			newAcceleration = force / current.massDensity;
+			newAcceleration = (current.density * gravity + pressureForce + viscosityForce) / current.density;
 
-			// Advance velocity to time t+1
+			cout << pressureForce.x << ", " << pressureForce.y << ", " << pressureForce.z << endl;
+
+			// Advance velocity to time t+1 using leapfrog integration
 			// v_i+1 = v_i + 0.5 * (a_i + a_i+1) * delta_t
 			current.velocity = current.velocity + 0.5f * (current.acceleration + newAcceleration) * timeStepSize;
 
 			// Advance acceleration to time t+1
 			current.acceleration = newAcceleration;
+
+			newGridCells[mapToIndex(current)].push_back(current);
 		}
 	}
+
+	gridCells = newGridCells;
 
 	numIterations++;
 }

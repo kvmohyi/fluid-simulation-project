@@ -10,12 +10,12 @@ using namespace glm;
 
 class Particle {
 public:
-	float massDensity;
+	float density;
 	float pressure;
 	vec3 position;
 	vec3 velocity;
 	vec3 acceleration;
-        Particle(vec3 p);
+    Particle(vec3 _position);
 };
 
 class Triangle {

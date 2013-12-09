@@ -1,6 +1,6 @@
 step_size 0.02
-num_grids 16
-grid_size 0.0625
+num_grids 1
+grid_size 3.0
 radius 0.0625
 world_size 3.0
 num_particles 1000
