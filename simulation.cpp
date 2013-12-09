@@ -11,6 +11,7 @@
 
 using namespace std;
 using namespace glm;
+#define DEBUG true
 
 void FluidSimulation::instantiateFromFile(string file) {
 	std::ifstream inpfile(file.c_str());
@@ -63,6 +64,12 @@ void FluidSimulation::instantiateFromFile(string file) {
 			else if(!splitline[0].compare("gas_constant")) {
 				gasConstant = atoi(splitline[1].c_str());
 			}
+			else if(!splitline[0].compare("test_version")) {
+				testVersion = atoi(splitline[1].c_str());
+			}
+			else if(!splitline[0].compare("dimensions")) {
+				dimensions = atoi(splitline[1].c_str());
+			}
 		}
 		inpfile.close();
 	}
@@ -70,6 +77,8 @@ void FluidSimulation::instantiateFromFile(string file) {
 
 FluidSimulation::FluidSimulation(string file) {
 	instantiateFromFile(file);
+	drawTest(dimensions, testVersion);
+	printParams();
 }
 
 void FluidSimulation::elapseTimeGrid() {
@@ -120,9 +129,9 @@ void FluidSimulation::elapseTimeGrid() {
 						for (size_t j = 0; j < gridCells[index].size(); j++) {
 							Particle& other = gridCells[index][j];
 							// Force from pressure
-							force = force - force_pressure(current, other);
+							force = force - force_pressure(current, other, particleMass);
 							// Force from viscosity
-							force = force + viscosityConstant * force_viscosity(current, other);
+							force = force + viscosityConstant * force_viscosity(current, other, particleMass);
 						}
 					}
 				}
@@ -144,9 +153,8 @@ void FluidSimulation::elapseTimeGrid() {
 	}
 }
 
-vector<Particle>& FluidSimulation::particleList() {
-	vector<Particle> asdf;
-	return asdf;
+vector<vector<Particle> >& FluidSimulation::particleList() {
+	return gridCells;
 }
 
 int FluidSimulation::mapToIndex(Particle particle) {
@@ -171,6 +179,9 @@ void FluidSimulation::drawWaterShape(int numParticles, float xStart, float yStar
 	float length = xEnd - xStart;
 	float width = yEnd- yStart;
 	float depth = zEnd - zStart;
+	#if DEBUG
+		cout << "hello again" << endl;
+	#endif
 	if(depth == 0.0){
 		float area = length * width;
 		float spacing = sqrt(numParticles / area);
@@ -183,6 +194,9 @@ void FluidSimulation::drawWaterShape(int numParticles, float xStart, float yStar
 				Particle particle = Particle(position);
 				int index = mapToIndex(particle);
 				gridCells[index].push_back(particle);
+				#if DEBUG
+				cout << particle.position.x << " " << particle.position.y << " " << particle.position.z << endl;
+				#endif
 			}
 		}
 	}						
@@ -209,7 +223,8 @@ void FluidSimulation::drawTest(int dimension, int version){
 	if(dimension == 2)
 	{
 		if(version == 1){
-		  drawWaterShape(numParticles, -2 / (worldSize / 2), -2 / (worldSize / 2), 0, 2 / (worldSize / 2), 2 / (worldSize / 2), 0);//just one water cube in 2D
+			drawWaterShape(numParticles, -.3, -.3, 0, .3, .3, 0);
+		  //drawWaterShape(numParticles, -.3, -2 / (worldSize / 2), 0, 2 / (worldSize / 2), 2 / (worldSize / 2), 0);//just one water cube in 2D
 		}
 		/*
 		else 
@@ -230,4 +245,21 @@ void FluidSimulation::drawTest(int dimension, int version){
 			}*/
 	} 
 	
+}
+
+void FluidSimulation::printParams() {
+	cout << "gravity: <" << gravity.x << ", " << gravity.y << ", " << gravity.z << ">" << endl;
+	cout << "timeStepSize: " << timeStepSize << endl;
+	cout << "numGrids: " << numGrids << endl;
+	cout << "numPartices: " << numParticles << endl;
+	cout << "worldSize: " << worldSize << endl;
+	cout << "gridSize: " << gridSize << endl;
+	cout << "localRadius: " << localRadius << endl;
+	cout << "volume: " << volume << endl;
+	cout << "viscosityConstant: " << viscosityConstant << endl;
+	cout << "gasConstant: " << gasConstant << endl;
+	cout << "restDensity: " << restDensity << endl;
+	cout << "particleMass: " << particleMass << endl;
+	cout << "testVersion: " << testVersion << endl;
+	cout << "dimensions: " << dimensions << endl;
 }

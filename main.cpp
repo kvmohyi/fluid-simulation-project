@@ -90,19 +90,22 @@ void myDisplay2D() {
 
   glColor3f(0.0f,0.0f,1.0f);
 
-  vector<Particle>& particles = fluidsim->particleList();
+  vector<vector<Particle> >& gridCells = fluidsim->particleList();
 
-  for (size_t i = 0; i < particles.size(); i++) {
-    glPushMatrix();
-      glTranslatef(particles[i].position.x, particles[i].position.y, particles[i].position.z);
-      glutSolidSphere(0.05, 20, 20);
-    glPopMatrix();
+  for (size_t cell = 0; cell < gridCells.size(); cell++) {
+    for (size_t i = 0; i < gridCells[cell].size(); i++) {
+      glPushMatrix();
+        glTranslatef(gridCells[cell][i].position.x, gridCells[cell][i].position.y, gridCells[cell][i].position.z);
+        glutSolidSphere(0.05, 20, 20);
+      glPopMatrix();
+    }
   }
 
   glFlush();
   glutSwapBuffers();
 
   fluidsim->elapseTimeGrid();
+  //cout << "derp" << endl;
 }
 
 

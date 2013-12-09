@@ -2,8 +2,10 @@ step_size 0.01
 num_grids 16
 grid_size 0.0625
 radius 0.0625
-world_size 1.0
+world_size 2.0
 num_particles 2000
 rest_density 1000
 viscosity_constant 0
 gas_constant 0
+test_version 1
+dimensions 2

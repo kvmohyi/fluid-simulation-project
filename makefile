@@ -1,2 +1,2 @@
 all:
-	g++ -I./glm main.cpp simulation.cpp equations.cpp geometry.cpp -o fluidsim -lglut -lGL
+	g++ -I./glm main.cpp geometry.cpp equations.cpp simulation.cpp -o fluidsim -lglut -lGL

@@ -27,18 +27,21 @@ private:
 	float gasConstant; // gas coefficient to be used in pressure equation
 	float restDensity; // the rest density of the fluid. 1000 for water
 	float particleMass; // the mass of each particle: volume * density / num_particles
+	int testVersion; // 1 is a cube in the center, 2 is a cube dropping into water
+	int dimensions; // set to 2 for 2D, 3 for 3D
 
 	void instantiateFromFile(string file);
 
 public:
 	FluidSimulation(string file);
 	void elapseTimeGrid();
-	vector<Particle>& particleList();
+	vector<vector<Particle> >& particleList();
 	int mapToIndex(Particle particle);
 	int mapToIndex(Particle particle, int x_offset, int y_offset, int z_offset);
 	int mapToIndex(int x, int y, int z);
-        void drawWaterShape(int numParticles, float xStart, float yStart, float zStart, float xEnd, float yEnd, float zEnd);
-        void drawTest(int dimension, int version);
+    void drawWaterShape(int numParticles, float xStart, float yStart, float zStart, float xEnd, float yEnd, float zEnd);
+    void drawTest(int dimension, int version);
+    void printParams();
 };
 
 
