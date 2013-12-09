@@ -153,7 +153,6 @@ int FluidSimulation::mapToIndex(Particle particle) {
 	int x_bucket = (worldSize / 2 + particle.position.x) / worldSize * numGrids;
 	int y_bucket = (worldSize / 2 + particle.position.y) / worldSize * numGrids;
 	int z_bucket = (worldSize / 2 + particle.position.z) / worldSize * numGrids;
-
 	return mapToIndex(x_bucket, y_bucket, z_bucket);
 }
 
@@ -161,16 +160,11 @@ int FluidSimulation::mapToIndex(Particle particle, int x_offset, int y_offset, i
 	int x_bucket = x_offset + (worldSize / 2 + particle.position.x) / worldSize * numGrids;
 	int y_bucket = y_offset + (worldSize / 2 + particle.position.y) / worldSize * numGrids;
 	int z_bucket = z_offset + (worldSize / 2 + particle.position.z) / worldSize * numGrids;
-
-<<<<<<< HEAD
 	return mapToIndex(x_bucket, y_bucket, z_bucket);
 }
 
 int FluidSimulation::mapToIndex(int x, int y, int z) {
 	return x + numGrids * (y + numGrids * z);
-}
-=======
-	return x_bucket + numGrids * (y_bucket + numGrids * z_bucket);
 }
 
 void FluidSimulation::drawWaterShape(int numParticles, float xStart, float yStart, float zStart, float xEnd, float yEnd, float zEnd){
@@ -187,7 +181,7 @@ void FluidSimulation::drawWaterShape(int numParticles, float xStart, float yStar
 			{
 				vec3 position = vec3(x, y, 0);
 				Particle particle = Particle(position);
-				int index = mapToBucket(particle);
+				int index = mapToIndex(particle);
 				gridCells[index].push_back(particle);
 			}
 		}
@@ -204,7 +198,7 @@ void FluidSimulation::drawWaterShape(int numParticles, float xStart, float yStar
 				{
 					vec3 position = vec3(x, y, z);
 					Particle particle = Particle(position);
-					int index = mapToBucket(particle);
+					int index = mapToIndex(particle);
 					gridCells[index].push_back(particle);
 				}
 			}
@@ -237,5 +231,3 @@ void FluidSimulation::drawTest(int dimension, int version){
 	} 
 	
 }
-				
->>>>>>> a15d4ae7c46329c6a518c1ee86abb89b9887eac6
