@@ -63,8 +63,9 @@ void myReshape(int w, int h) {
   // glOrtho(-1, 1 + (w-400)/200.0 , -1 -(h-400)/200.0, 1, 1, -1); // resize type = add
   // glOrtho(-w/400.0, w/400.0, -h/400.0, h/400.0, 1, -1); // resize type = center
 
-  glOrtho(-1, 1, -1, 1, 1, -1);    // resize type = stretch
-
+  //glOrtho(-1, 1, -1, 1, 1, -1);    // resize type = stretch
+  gluPerspective(90.0, 1.0, 0.0, 10.0);
+  gluLookAt(0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
   //------------------------------------------------------------
 }
 
@@ -73,8 +74,19 @@ void myReshape(int w, int h) {
 // sets the window up
 //****************************************************
 void initScene(){
-  glClearColor(0.0f, 0.0f, 0.0f, 0.0f); // Clear to black, fully transparent
+  glClearColor(1.0f, 1.0f, 1.0f, 0.0f); // Clear to black, fully transparent
+  glShadeModel(GL_SMOOTH);
 
+  GLfloat mat_ambient[] = {0.0f, 0.0f, 1.0f, 1.0f};
+  GLfloat mat_diffuse[] = {0.0f, 0.0f, 1.0f, 1.0f};
+  GLfloat light_position[] = {0.0f, 10.0f, 0.0f};
+  glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+  glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+  glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+
+  glEnable(GL_LIGHTING);
+  glEnable(GL_LIGHT0);
+  glEnable(GL_DEPTH_TEST);
   myReshape(viewport.w,viewport.h);
 }
 
@@ -83,10 +95,11 @@ void initScene(){
 // function that does the actual drawing
 //***************************************************
 void myDisplay2D() {
-  glClear(GL_COLOR_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
+
   glScalef(2.0f / fluidsim->worldSize, 2.0f / fluidsim->worldSize, 2.0f / fluidsim->worldSize);
 
   glColor3f(0.0f,0.0f,1.0f);

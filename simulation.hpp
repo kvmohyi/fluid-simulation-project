@@ -7,7 +7,7 @@
 
 #include "geometry.hpp"
 
-#define DEBUG true
+#define DEBUG false
 
 using namespace std;
 using namespace glm;
@@ -24,7 +24,6 @@ public:
 	float worldSize; // the size of the world
 	float gridSize; // the size of each side of each grid cell
 	float localRadius; // the region of support for the kernel smoothing functions
-	float volume; // the total volume of fluid
 	float viscosityConstant; // viscosity coefficient to be used in viscosity equation
 	float gasConstant; // gas coefficient to be used in pressure equation
 	float restDensity; // the rest density of the fluid. 1000 for water

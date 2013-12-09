@@ -77,7 +77,7 @@ void FluidSimulation::instantiateFromFile(string file) {
 FluidSimulation::FluidSimulation(string file) {
 	instantiateFromFile(file);
 	gridCells.resize(numGrids * numGrids * numGrids);
-	gravity = vec3(0.0f, -9.8f, 0.0f);
+	gravity = vec3(0.0f, -0.05f, 0.0f);
 	numIterations = 0;
 	drawTest(dimensions, testVersion);
 	printParams();
@@ -242,7 +242,7 @@ void FluidSimulation::drawTest(int dimension, int version){
 	else
 	{
 		if(version == 1){
-		  drawWaterShape(numParticles, -2 / (worldSize / 2), -2 / (worldSize / 2),  -2 / (worldSize / 2) , 2 / (worldSize / 2), 2 / (worldSize / 2), 2 / (worldSize / 2));
+		  drawWaterShape(numParticles, worldSize / -8.0, worldSize / 4.0, worldSize / -8.0 , worldSize / 8.0, worldSize / 2.0, worldSize / 8.0);
 		}
 		/*
 		else {
@@ -261,7 +261,6 @@ void FluidSimulation::printParams() {
 	cout << "worldSize: " << worldSize << endl;
 	cout << "gridSize: " << gridSize << endl;
 	cout << "localRadius: " << localRadius << endl;
-	cout << "volume: " << volume << endl;
 	cout << "viscosityConstant: " << viscosityConstant << endl;
 	cout << "gasConstant: " << gasConstant << endl;
 	cout << "restDensity: " << restDensity << endl;
