@@ -87,6 +87,7 @@ void myDisplay2D() {
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
+  glScalef(2.0f / fluidsim->worldSize, 2.0f / fluidsim->worldSize, 2.0f / fluidsim->worldSize);
 
   glColor3f(0.0f,0.0f,1.0f);
 
@@ -95,8 +96,12 @@ void myDisplay2D() {
   for (size_t cell = 0; cell < gridCells.size(); cell++) {
     for (size_t i = 0; i < gridCells[cell].size(); i++) {
       glPushMatrix();
+        #if DEBUG
+          cout << "Velocity at time=" << fluidsim->numIterations * fluidsim->timeStepSize << ": <" 
+          << gridCells[cell][i].velocity.x << ", " << gridCells[cell][i].velocity.y << ", " << gridCells[cell][i].velocity.z << ">" << endl;
+        #endif
         glTranslatef(gridCells[cell][i].position.x, gridCells[cell][i].position.y, gridCells[cell][i].position.z);
-        glutSolidSphere(0.05, 20, 20);
+        glutSolidSphere(0.01, 20, 20);
       glPopMatrix();
     }
   }
@@ -135,8 +140,8 @@ int main(int argc, char *argv[]) {
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
 
   // Initalize theviewport size
-  viewport.w = 400;
-  viewport.h = 400;
+  viewport.w = 800;
+  viewport.h = 800;
 
   //The size and position of the window
   glutInitWindowSize(viewport.w, viewport.h);

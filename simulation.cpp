@@ -11,7 +11,6 @@
 
 using namespace std;
 using namespace glm;
-#define DEBUG true
 
 void FluidSimulation::instantiateFromFile(string file) {
 	std::ifstream inpfile(file.c_str());
@@ -44,13 +43,13 @@ void FluidSimulation::instantiateFromFile(string file) {
 				numGrids = atoi(splitline[1].c_str());
 			}
 			else if(!splitline[0].compare("grid_size")) {
-				gridSize = atoi(splitline[1].c_str());
+				gridSize = atof(splitline[1].c_str());
 			}
 			else if(!splitline[0].compare("radius")) {
-				localRadius = atoi(splitline[1].c_str());
+				localRadius = atof(splitline[1].c_str());
 			}
 			else if(!splitline[0].compare("world_size")) {
-				worldSize = atoi(splitline[1].c_str());
+				worldSize = atof(splitline[1].c_str());
 			}
 			else if(!splitline[0].compare("num_particles")) {
 				numParticles = atoi(splitline[1].c_str());
@@ -59,10 +58,10 @@ void FluidSimulation::instantiateFromFile(string file) {
 				restDensity = atof(splitline[1].c_str());
 			}
 			else if(!splitline[0].compare("viscosity_constant")) {
-				viscosityConstant = atoi(splitline[1].c_str());
+				viscosityConstant = atof(splitline[1].c_str());
 			}
 			else if(!splitline[0].compare("gas_constant")) {
-				gasConstant = atoi(splitline[1].c_str());
+				gasConstant = atof(splitline[1].c_str());
 			}
 			else if(!splitline[0].compare("test_version")) {
 				testVersion = atoi(splitline[1].c_str());
@@ -77,6 +76,9 @@ void FluidSimulation::instantiateFromFile(string file) {
 
 FluidSimulation::FluidSimulation(string file) {
 	instantiateFromFile(file);
+	gridCells.resize(numGrids * numGrids * numGrids);
+	gravity = vec3(0.0f, -9.8f, 0.0f);
+	numIterations = 0;
 	drawTest(dimensions, testVersion);
 	printParams();
 }
@@ -151,6 +153,8 @@ void FluidSimulation::elapseTimeGrid() {
 			current.acceleration = newAcceleration;
 		}
 	}
+
+	numIterations++;
 }
 
 vector<vector<Particle> >& FluidSimulation::particleList() {
@@ -179,11 +183,10 @@ void FluidSimulation::drawWaterShape(int numParticles, float xStart, float yStar
 	float length = xEnd - xStart;
 	float width = yEnd- yStart;
 	float depth = zEnd - zStart;
-	#if DEBUG
-		cout << "hello again" << endl;
-	#endif
+
 	if(depth == 0.0){
 		float area = length * width;
+		particleMass = area * restDensity / numParticles;
 		float spacing = sqrt(numParticles / area);
 		float step = 1 / spacing;		
 		for(float x = xStart; x < xEnd; x += step)
@@ -202,7 +205,8 @@ void FluidSimulation::drawWaterShape(int numParticles, float xStart, float yStar
 	}						
 	else {		
 		float volume = length * width * depth;
-		float spacing = pow(numParticles / volume, .333333333);
+		particleMass = volume * restDensity / numParticles;
+		float spacing = pow(numParticles / volume, 1.0f / 3.0f);
 		float step = 1/spacing;
 		for(float x = xStart; x < xEnd; x += step)
 		{	
@@ -218,12 +222,14 @@ void FluidSimulation::drawWaterShape(int numParticles, float xStart, float yStar
 			}
 		}
 	}
+
+	numIterations++;
 }
 void FluidSimulation::drawTest(int dimension, int version){
 	if(dimension == 2)
 	{
 		if(version == 1){
-			drawWaterShape(numParticles, -.3, -.3, 0, .3, .3, 0);
+			drawWaterShape(numParticles, -.3, worldSize / 4.0, 0, .3, worldSize / 2.0, 0);
 		  //drawWaterShape(numParticles, -.3, -2 / (worldSize / 2), 0, 2 / (worldSize / 2), 2 / (worldSize / 2), 0);//just one water cube in 2D
 		}
 		/*

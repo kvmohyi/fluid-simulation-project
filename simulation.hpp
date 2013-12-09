@@ -7,15 +7,17 @@
 
 #include "geometry.hpp"
 
+#define DEBUG true
+
 using namespace std;
 using namespace glm;
 
 class FluidSimulation {
-private:
+public:
 	vector<vector<Particle> > gridCells;
 	vector<RigidBody> rigidBodies;
 
-	vec3 gravity; // by default, set this to (0, 0, -9.8)
+	vec3 gravity; // by default, set this to (0, -9.8, 0)
 	float timeStepSize; // the size of each timestep. the smaller, the more accurate.
 	int numGrids; // the number of grids along each axis
 	int numParticles; // the total number of particles in the simulation
@@ -30,9 +32,10 @@ private:
 	int testVersion; // 1 is a cube in the center, 2 is a cube dropping into water
 	int dimensions; // set to 2 for 2D, 3 for 3D
 
+	int numIterations;
+
 	void instantiateFromFile(string file);
 
-public:
 	FluidSimulation(string file);
 	void elapseTimeGrid();
 	vector<vector<Particle> >& particleList();
