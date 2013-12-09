@@ -107,14 +107,29 @@ void FluidSimulation::elapseTimeGrid() {
 			// Force from gravity
 			force = current.massDensity * gravity;
 
-			for (size_t  j_cell = 0; j_cell < gridCells.size(); j_cell++) {
-				for (size_t j = 0; j < gridCells[i_cell].size(); j++) {
-					Particle& other = gridCells[j_cell][j];
-					// Force from pressure
-					force = force - force_pressure(current, other);
-					// Force from viscosity
-					force = force + viscosityConstant * force_viscosity(current, other);
+			int offsets[] = {-1, 1};
+
+			for (int x_offset = 0; x_offset < 2; x_offset++) {
+				for (int y_offset = 0; y_offset < 2; y_offset++) {
+					for (int z_offset = 0; z_offset < 2; z_offset++) {
+						int index = mapToIndex(offsets[x_offset], offsets[y_offset], offsets[z_offset]);
+						// If the cell is out of bounds, then ignore it
+						if (index < 0 || index >= gridCells.size())
+							continue;
+
+						for (size_t j = 0; j < gridCells[index].size(); j++) {
+							Particle& other = gridCells[index][j];
+							// Force from pressure
+							force = force - force_pressure(current, other);
+							// Force from viscosity
+							force = force + viscosityConstant * force_viscosity(current, other);
+						}
+					}
 				}
+			}
+
+			for (size_t  j_cell = 0; j_cell < gridCells.size(); j_cell++) {
+				
 			}
 
 			newAcceleration = force / current.massDensity;
@@ -134,18 +149,22 @@ vector<Particle>& FluidSimulation::particleList() {
 	return asdf;
 }
 
-int FluidSimulation::mapToBucket(Particle particle) {
+int FluidSimulation::mapToIndex(Particle particle) {
 	int x_bucket = (worldSize / 2 + particle.position.x) / worldSize * numGrids;
 	int y_bucket = (worldSize / 2 + particle.position.y) / worldSize * numGrids;
 	int z_bucket = (worldSize / 2 + particle.position.z) / worldSize * numGrids;
 
-	return x_bucket + numGrids * (y_bucket + numGrids * z_bucket);
+	return mapToIndex(x_bucket, y_bucket, z_bucket);
 }
 
-int FluidSimulation::mapToBucket(Particle particle, int x_offset, int y_offset, int z_offset) {
+int FluidSimulation::mapToIndex(Particle particle, int x_offset, int y_offset, int z_offset) {
 	int x_bucket = x_offset + (worldSize / 2 + particle.position.x) / worldSize * numGrids;
 	int y_bucket = y_offset + (worldSize / 2 + particle.position.y) / worldSize * numGrids;
 	int z_bucket = z_offset + (worldSize / 2 + particle.position.z) / worldSize * numGrids;
 
-	return x_bucket + numGrids * (y_bucket + numGrids * z_bucket);
+	return mapToIndex(x_bucket, y_bucket, z_bucket);
+}
+
+int FluidSimulation::mapToIndex(int x, int y, int z) {
+	return x + numGrids * (y + numGrids * z);
 }

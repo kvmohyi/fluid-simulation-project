@@ -34,8 +34,9 @@ public:
 	FluidSimulation(string file);
 	void elapseTimeGrid();
 	vector<Particle>& particleList();
-	int mapToBucket(Particle particle);
-	int mapToBucket(Particle particle, int x_offset, int y_offset, int z_offset);
+	int mapToIndex(Particle particle);
+	int mapToIndex(Particle particle, int x_offset, int y_offset, int z_offset);
+	int mapToIndex(int x, int y, int z);
 };
 
 #endif
