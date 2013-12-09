@@ -10,3 +10,7 @@ using namespace glm;
 bool RigidBody::collision(vec3 start, vec3 end) {
 	return false;
 }
+
+Particle::Particle(vec3 p){
+  position = p;
+}

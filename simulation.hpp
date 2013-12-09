@@ -36,6 +36,9 @@ public:
 	vector<Particle>& particleList();
 	int mapToBucket(Particle particle);
 	int mapToBucket(Particle particle, int x_offset, int y_offset, int z_offset);
+        void drawWaterShape(int numParticles, float xStart, float yStart, float zStart, float xEnd, float yEnd, float zEnd);
+        void drawTest(int dimension, int version);
 };
+
 
 #endif

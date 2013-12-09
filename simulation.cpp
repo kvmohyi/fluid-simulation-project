@@ -149,3 +149,69 @@ int FluidSimulation::mapToBucket(Particle particle, int x_offset, int y_offset, 
 
 	return x_bucket + numGrids * (y_bucket + numGrids * z_bucket);
 }
+
+void FluidSimulation::drawWaterShape(int numParticles, float xStart, float yStart, float zStart, float xEnd, float yEnd, float zEnd){
+	float length = xEnd - xStart;
+	float width = yEnd- yStart;
+	float depth = zEnd - zStart;
+	if(depth == 0.0){
+		float area = length * width;
+		float spacing = sqrt(numParticles / area);
+		float step = 1 / spacing;		
+		for(float x = xStart; x < xEnd; x += step)
+		{
+			for(float y = yStart; y < yEnd; y += step)
+			{
+				vec3 position = vec3(x, y, 0);
+				Particle particle = Particle(position);
+				int index = mapToBucket(particle);
+				gridCells[index].push_back(particle);
+			}
+		}
+	}						
+	else {		
+		float volume = length * width * depth;
+		float spacing = pow(numParticles / volume, .333333333);
+		float step = 1/spacing;
+		for(float x = xStart; x < xEnd; x += step)
+		{	
+			for(float y = yStart; y < yEnd; y += step)
+			{	
+				for(float z = zStart; z < zEnd; z += step)
+				{
+					vec3 position = vec3(x, y, z);
+					Particle particle = Particle(position);
+					int index = mapToBucket(particle);
+					gridCells[index].push_back(particle);
+				}
+			}
+		}
+	}
+}
+void FluidSimulation::drawTest(int dimension, int version){
+	if(dimension == 2)
+	{
+		if(version == 1){
+		  drawWaterShape(numParticles, -2 / (worldSize / 2), -2 / (worldSize / 2), 0, 2 / (worldSize / 2), 2 / (worldSize / 2), 0);//just one water cube in 2D
+		}
+		/*
+		else 
+		{
+		        drawWaterShape(num_particles * .2, xStart, yStart, 0, xEnd, yEnd, 0);// dropping a cube into a body of water
+			drawWaterShape(num_particles * .8, -1, -1, 0, 1, 1, 0);
+			}*/
+	}
+	else
+	{
+		if(version == 1){
+		  drawWaterShape(numParticles, -2 / (worldSize / 2), -2 / (worldSize / 2),  -2 / (worldSize / 2) , 2 / (worldSize / 2), 2 / (worldSize / 2), 2 / (worldSize / 2));
+		}
+		/*
+		else {
+			drawWaterShape(num_particles * .2, xStart, yStart, zStart, xEnd, yEnd, zEnd);
+			drawWaterShape(num_particles * .8,-1, -1, -1, 1, 1, 1);
+			}*/
+	} 
+	
+}
+				
