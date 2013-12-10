@@ -5,6 +5,7 @@
 #include <utility> 
 
 #include <glm/glm.hpp>
+#include <glm/ext.hpp>
 
 #include "simulation.hpp"
 #include "equations.hpp"
@@ -13,7 +14,7 @@
 using namespace std;
 using namespace glm;
 
-float dampFactor = 0.1;
+float dampFactor = 0.7;
 
 void FluidSimulation::instantiateFromFile(string file) {
 	std::ifstream inpfile(file.c_str());
@@ -72,6 +73,12 @@ void FluidSimulation::instantiateFromFile(string file) {
 			else if(!splitline[0].compare("dimensions")) {
 				dimensions = atoi(splitline[1].c_str());
 			}
+			else if(!splitline[0].compare("tension_threshold")) {
+				tensionThreshold = atof(splitline[1].c_str());
+			}
+			else if(!splitline[0].compare("tension_constant")) {
+				tensionConstant = atof(splitline[1].c_str());
+			}
 		}
 		inpfile.close();
 	}
@@ -81,7 +88,7 @@ FluidSimulation::FluidSimulation(string file) {
 	instantiateFromFile(file);
 
 	// Number of grids such that each grid cell is greater than the 2 * radius of support
-	numGrids = ceil(worldSize / localRadius);
+	numGrids = ceil(worldSize / (2.0 * localRadius));
 	// gridSize > 2 * localRadius
 	gridSize = worldSize / numGrids;
 	// Instantiate the "3D" grid of cells
@@ -132,10 +139,13 @@ void FluidSimulation::elapseTimeGrid() {
 
 						for (size_t j = 0; j < gridCells[index].size(); j++) {
 							Particle& other = gridCells[index][j];
+
+							float r = particleDistance(current, other);
+
+							if (r > localRadius)
+								continue;
+
 							current.density += particleMass * poly6Kernel(current, other, localRadius);
-							#if false
-								cout << poly6Kernel(current, other, localRadius) << endl;
-							#endif
 						}
 					}
 				}
@@ -154,18 +164,19 @@ void FluidSimulation::elapseTimeGrid() {
 			Particle& current = gridCells[i_cell][i];
 			vec3 pressureForce(0.0f, 0.0f, 0.0f);
 			vec3 viscosityForce(0.0f, 0.0f, 0.0f);
+			vec3 surfaceTensionForce(0.0f, 0.0f, 0.0f);
+			vec3 inwardSurfaceNormal(0.0f, 0.0f, 0.0f);
+			float colorFieldLaplacian = 0.0f;
 			vec3 newPosition; // Position at t+1
 			vec3 newAcceleration; // Acceleration at t+1
 			vec3 newVelocity; // Velocity at t+1
 			bool collide = false;
 			float time = timeStepSize;
 
-			current.print();
-			cout << endl;
-
-			// Advance position to time t+1 using leapfrog integration
-			// x_i+1 = x_i + v_i * delta_t + 0.5 * a_i * delta_t ^ 2
-			//newPosition = current.position + current.velocity * timeStepSize + 0.5f * current.acceleration + pow(timeStepSize, 2.0f);
+			#if false
+				current.print();
+				cout << endl;
+			#endif
 
 			/*if(cube.collision(current.position, newPosition)){
 			  collide = true;
@@ -188,7 +199,6 @@ void FluidSimulation::elapseTimeGrid() {
 			else {*/
 			//}
 
-
 			int offsets[] = {-1, 0, 1};
 
 			for (int x_offset = 0; x_offset < 3; x_offset++) {
@@ -209,21 +219,42 @@ void FluidSimulation::elapseTimeGrid() {
 							if (index == i_cell && i == j)
 								continue;
 							
+							float r = particleDistance(current, other);
+
+							if (r > localRadius)
+								continue;
+
 							// Force from pressure
 							pressureForce += pressureForcePartial(current, other, particleMass, localRadius);
 							//cout << "Pressure Force: " << pressureForce.x << ", " << pressureForce.y << ", " << pressureForce.z << endl;
 							// Force from viscosity
-							viscosityForce += viscosityForcePartial(current, other, viscosityConstant, particleMass, localRadius);
+							viscosityForce += viscosityForcePartial(current, other, timeStepSize, viscosityConstant, particleMass, localRadius);
+							// Surface tension yay!
+							inwardSurfaceNormal += inwardSurfaceNormalPartial(current, other, particleMass, localRadius);
+							colorFieldLaplacian += colorFieldLaplacianPartial(current, other, particleMass, localRadius);
 						}
 					}
 				}
 			}
 
-			newAcceleration = (current.density * gravity + pressureForce + viscosityForce) / current.density;
+			float inwardSurfaceNormalMagnitude = glm::length(inwardSurfaceNormal);
+
+			if (inwardSurfaceNormalMagnitude >= tensionThreshold) {
+				surfaceTensionForce = -1.0f * tensionConstant * colorFieldLaplacian * inwardSurfaceNormal / inwardSurfaceNormalMagnitude;
+				//cout << "Inward Surface Tension Force: " << to_string(surfaceTensionForce) << endl;
+			}
+			// else leave it as the zero vector
+
+			
+
+			newAcceleration = (current.density * gravity + pressureForce + viscosityForce + surfaceTensionForce) / current.density;
 			current.acceleration = newAcceleration;
 
-			newVelocity = current.velocity + timeStepSize * newAcceleration;
-			newPosition = current.position + timeStepSize * newVelocity + 0.5f * timeStepSize * timeStepSize * newAcceleration;
+			newVelocity = current.velocity + timeStepSize * current.acceleration;
+			newPosition = current.position + timeStepSize * newVelocity;
+
+			//newVelocity = current.velocity + timeStepSize * newAcceleration;
+			//newPosition = current.position + timeStepSize * newVelocity + 0.5f * timeStepSize * timeStepSize * newAcceleration;
 			
 			current.position = newPosition;
 			current.velocity = newVelocity;
@@ -340,4 +371,6 @@ void FluidSimulation::printParams() {
 	cout << "particleMass: " << particleMass << endl;
 	cout << "testVersion: " << testVersion << endl;
 	cout << "dimensions: " << dimensions << endl;
+	cout << "tensionThreshold: " << tensionThreshold << endl;
+	cout << "tensionConstant: " << tensionConstant << endl;
 }

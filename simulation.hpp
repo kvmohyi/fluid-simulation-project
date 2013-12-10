@@ -30,6 +30,8 @@ public:
 	float particleMass; // the mass of each particle: volume * density / num_particles
 	int testVersion; // 1 is a cube in the center, 2 is a cube dropping into water
 	int dimensions; // set to 2 for 2D, 3 for 3D
+	float tensionConstant;
+	float tensionThreshold;
 
 	int numIterations;
 

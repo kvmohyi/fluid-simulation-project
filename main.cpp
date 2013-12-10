@@ -67,7 +67,7 @@ void myReshape(int w, int h) {
   // glOrtho(-w/400.0, w/400.0, -h/400.0, h/400.0, 1, -1); // resize type = center
 
   //glOrtho(-1, 1, -1, 1, 1, -1);    // resize type = stretch
-  gluPerspective(90.0, (float)viewport.w/(float)viewport.h, 0.1, 100.0);
+  gluPerspective(50.0, (float)viewport.w/(float)viewport.h, 0.1, 100.0);
   //gluLookAt(0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
   //------------------------------------------------------------
 }
@@ -98,7 +98,8 @@ void initScene(){
 // function that does the actual drawing
 //***************************************************
 void myDisplay2D() {
-  if (continueSimulation) {
+  //if (continueSimulation) {
+  if (true) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glMatrixMode(GL_MODELVIEW);
