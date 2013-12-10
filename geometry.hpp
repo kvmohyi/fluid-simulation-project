@@ -20,6 +20,7 @@ public:
 	vec3 velocity;
 	vec3 acceleration;
     Particle(vec3 _position);
+    void print();
 };
 
 class Triangle {

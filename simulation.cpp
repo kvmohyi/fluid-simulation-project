@@ -13,7 +13,7 @@
 using namespace std;
 using namespace glm;
 
-float dampFactor = 0.7;
+float dampFactor = 0.1;
 
 void FluidSimulation::instantiateFromFile(string file) {
 	std::ifstream inpfile(file.c_str());
@@ -80,21 +80,23 @@ void FluidSimulation::instantiateFromFile(string file) {
 FluidSimulation::FluidSimulation(string file) {
 	instantiateFromFile(file);
 
-	// Number of grids such that each grid cell is greater than the radius of support
+	// Number of grids such that each grid cell is greater than the 2 * radius of support
 	numGrids = ceil(worldSize / localRadius);
-	// gridSize > localRadius
+	// gridSize > 2 * localRadius
 	gridSize = worldSize / numGrids;
-	// Instantiate the 3D grid of cells
+	// Instantiate the "3D" grid of cells
 	gridCells.resize(numGrids * numGrids * numGrids);
 	// Set gravity here
-	gravity = vec3(0.0f, -9.8f, 0.0f);
+	//gravity = vec3(0.0f, -9.8f, 0.0f);
+	gravity = vec3(0.0f, 0.0f, 0.0f);
 	// Initialize the iteration count
 	numIterations = 0;
+	numParticles = 0;
 	// Set up the test case
 	drawTest(dimensions, testVersion);
-	cube = RigidBody((float)(worldSize) * 0.7, (float)(worldSize) * 0.7, (float)(worldSize) * 0.7);
-	cout << cube.length << endl;
-	// Verify program input
+	cube = RigidBody(worldSize, worldSize, worldSize);
+	//cout << cube.length << endl;
+	// Verify the parameters
 	printParams();
 }
 
@@ -106,17 +108,42 @@ void FluidSimulation::elapseTimeGrid() {
 			Particle& current = gridCells[i_cell][i];
 			current.density = 0.0f;
 
+			/*//Old version that searches through all particles, rather than just nearby cells
 			for (size_t  j_cell = 0; j_cell < gridCells.size(); j_cell++) {
 				for (size_t j = 0; j < gridCells[j_cell].size(); j++) {
 					Particle& other = gridCells[j_cell][j];
 					current.density += particleMass * poly6Kernel(current, other, localRadius);
+
+					#if false
+						cout << poly6Kernel(current, other, localRadius) << endl;
+					#endif
+				}
+			}*/
+
+			int offsets[] = {-1, 0, 1};
+
+			for (int x_offset = 0; x_offset < 3; x_offset++) {
+				for (int y_offset = 0; y_offset < 3; y_offset++) {
+					for (int z_offset = 0; z_offset < 3; z_offset++) {
+						int index = mapToIndex(current, offsets[x_offset], offsets[y_offset], offsets[z_offset]);
+						// If the cell is out of bounds, then ignore it
+						if (index < 0 || index >= gridCells.size())
+							continue;
+
+						for (size_t j = 0; j < gridCells[index].size(); j++) {
+							Particle& other = gridCells[index][j];
+							current.density += particleMass * poly6Kernel(current, other, localRadius);
+							#if false
+								cout << poly6Kernel(current, other, localRadius) << endl;
+							#endif
+						}
+					}
 				}
 			}
-			//current.pressure = gasConstant * (pow(current.massDensity * particleMass / restDensity, 7.0f) - 1.0f);
 
 			current.pressure = gasConstant * (current.density - restDensity);
-			#if true
-			cout << current.pressure << endl;
+			#if false
+				cout << current.density << endl;
 			#endif
 		}
 	}
@@ -129,18 +156,18 @@ void FluidSimulation::elapseTimeGrid() {
 			vec3 viscosityForce(0.0f, 0.0f, 0.0f);
 			vec3 newPosition; // Position at t+1
 			vec3 newAcceleration; // Acceleration at t+1
-			vec3 newVelocity;
+			vec3 newVelocity; // Velocity at t+1
 			bool collide = false;
 			float time = timeStepSize;
+
+			current.print();
+			cout << endl;
 
 			// Advance position to time t+1 using leapfrog integration
 			// x_i+1 = x_i + v_i * delta_t + 0.5 * a_i * delta_t ^ 2
 			//newPosition = current.position + current.velocity * timeStepSize + 0.5f * current.acceleration + pow(timeStepSize, 2.0f);
 
-			newVelocity = current.velocity + timeStepSize * current.acceleration;
-			newPosition = current.position + timeStepSize * newVelocity;
-
-			if(cube.collision(current.position, newPosition)){
+			/*if(cube.collision(current.position, newPosition)){
 			  collide = true;
 			  cout << "collision" << endl;
 			  pair<float, vec3> timeAndNormal = cube.collisionTimeNormal(current.position, newPosition);
@@ -158,16 +185,15 @@ void FluidSimulation::elapseTimeGrid() {
 			    cout << "newPosition " << newPosition.x << " " << newPosition.y << " " << newPosition.z << endl;
 			    
 			}
-			else {
-				current.position = newPosition;
-				current.velocity = newVelocity;
-			}
+			else {*/
+			//}
 
-			int offsets[] = {-1, 1};
 
-			for (int x_offset = 0; x_offset < 2; x_offset++) {
-				for (int y_offset = 0; y_offset < 2; y_offset++) {
-					for (int z_offset = 0; z_offset < 2; z_offset++) {
+			int offsets[] = {-1, 0, 1};
+
+			for (int x_offset = 0; x_offset < 3; x_offset++) {
+				for (int y_offset = 0; y_offset < 3; y_offset++) {
+					for (int z_offset = 0; z_offset < 3; z_offset++) {
 						int index = mapToIndex(current, offsets[x_offset], offsets[y_offset], offsets[z_offset]);
 						// If the cell is out of bounds, then ignore it
 						if (index < 0 || index >= gridCells.size())
@@ -178,8 +204,14 @@ void FluidSimulation::elapseTimeGrid() {
 
 						for (size_t j = 0; j < gridCells[index].size(); j++) {
 							Particle& other = gridCells[index][j];
+
+							// if i == j, then skip it
+							if (index == i_cell && i == j)
+								continue;
+							
 							// Force from pressure
 							pressureForce += pressureForcePartial(current, other, particleMass, localRadius);
+							//cout << "Pressure Force: " << pressureForce.x << ", " << pressureForce.y << ", " << pressureForce.z << endl;
 							// Force from viscosity
 							viscosityForce += viscosityForcePartial(current, other, viscosityConstant, particleMass, localRadius);
 						}
@@ -187,24 +219,18 @@ void FluidSimulation::elapseTimeGrid() {
 				}
 			}
 
-			//cout << "got here" << endl;
-
-			//cout << "Pressure Force: " << pressureForce.x << ", " << pressureForce.y << ", " << pressureForce.z << endl;
-
-			newAcceleration = (current.density * gravity /*+ pressureForce + viscosityForce*/) / current.density;
+			newAcceleration = (current.density * gravity + pressureForce + viscosityForce) / current.density;
 			current.acceleration = newAcceleration;
-			// Advance velocity to time t+1 using leapfrog integration
-			// v_i+1 = v_i + 0.5 * (a_i + a_i+1) * delta_t
-			//current.velocity = current.velocity + 0.5f * (current.acceleration + newAcceleration) * timeStepSize;
 
-			// Advance acceleration to time t+1
-			//current.acceleration = newAcceleration;
+			newVelocity = current.velocity + timeStepSize * newAcceleration;
+			newPosition = current.position + timeStepSize * newVelocity + 0.5f * timeStepSize * timeStepSize * newAcceleration;
+			
+			current.position = newPosition;
+			current.velocity = newVelocity;
 
-			//cout << "Acceleration: " << current.acceleration.x << ", " << current.acceleration.y << ", " << current.acceleration.z << endl;
-
-			/*int newIndex = mapToIndex(current);
+			int newIndex = mapToIndex(current);
 			if (newIndex < 0 || newIndex >= gridCells.size())
-				continue;*/
+				continue;
 			newGridCells[mapToIndex(current)].push_back(current);
 		}
 	}
@@ -280,31 +306,23 @@ void FluidSimulation::drawWaterShape(int numParticles, float xStart, float yStar
 	numIterations++;
 }
 void FluidSimulation::drawTest(int dimension, int version){
-	if(dimension == 2)
-	{
-		if(version == 1){
-			drawWaterShape(numParticles, -.3, worldSize / 4.0, 0, .3, worldSize / 2.0, 0);
-		  //drawWaterShape(numParticles, -.3, -2 / (worldSize / 2), 0, 2 / (worldSize / 2), 2 / (worldSize / 2), 0);//just one water cube in 2D
-		}
-		/*
-		else 
-		{
-		        drawWaterShape(num_particles * .2, xStart, yStart, 0, xEnd, yEnd, 0);// dropping a cube into a body of water
-			drawWaterShape(num_particles * .8, -1, -1, 0, 1, 1, 0);
-			}*/
-	}
-	else
-	{
 		if(version == 1){
 		  drawWaterShape(numParticles, worldSize / -8.0, worldSize / 4.0, worldSize / -8.0 , worldSize / 8.0, worldSize / 2.0, worldSize / 8.0);
 		}
-		/*
-		else {
-			drawWaterShape(num_particles * .2, xStart, yStart, zStart, xEnd, yEnd, zEnd);
-			drawWaterShape(num_particles * .8,-1, -1, -1, 1, 1, 1);
-			}*/
-	} 
-	
+		else if(version == 2) {
+			particleMass = 0.02f;
+			float stepSize = 0.025;
+			for (float x = worldSize / -16.0f; x < worldSize / 16.0f; x += stepSize) {
+				for (float y = worldSize / -16.0f; y < worldSize / 16.0f; y += stepSize) {
+					for (float z = worldSize / -16.0f; z < worldSize / 16.0f; z += stepSize) {
+						vec3 position(x, y, z);
+						Particle particle(position);
+						gridCells[mapToIndex(particle)].push_back(particle);
+						numParticles++;
+					}
+				}
+			}
+		}
 }
 
 void FluidSimulation::printParams() {

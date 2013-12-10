@@ -104,7 +104,7 @@ void myDisplay2D() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glPushMatrix();
-      glTranslatef(0.0f, 0.0f, -1.0f);
+      glTranslatef(0.0f, 0.0f, -0.5f);
 
       glScalef(1.0f / fluidsim->worldSize, 1.0f / fluidsim->worldSize, 1.0f / fluidsim->worldSize);
 

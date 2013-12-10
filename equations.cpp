@@ -88,7 +88,6 @@ float spikyKernel(Particle current, Particle other, float h) {
 vec3 spikyKernelGradient(Particle current, Particle other, float h) {
 	float r = particleDistance(current, other);
 
-
 	if (r > h)
 		return vec3(0.0f, 0.0f, 0.0f);
 
@@ -105,13 +104,19 @@ float viscosityKernel(Particle current, Particle other, float h) {
 	return 15.0f / (2.0f * PI * pow(h, 3.0f)) * (pow(r, 3.0f) / (-2.0f * pow(h, 3.0f)) + pow(r, 2.0f) / pow(h, 2.0f) + h / (2.0f * r) - 1.0f);
 }
 
+// Use this kernel for viscosity
 float viscosityKernelLaplacian(Particle current, Particle other, float h) {
-	return 45.0f / (PI * pow(h, 6.0f)) * (h - particleDistance(current, other));
+	float r = particleDistance(current, other);
+
+	if (r > h)
+		return 0.0f;
+
+	return 45.0f / (PI * pow(h, 6.0f)) * (h - r);
 }
 
 // The default kernel
 float poly6Kernel(Particle current, Particle other, float h) {
-	float r = glm::distance(current.position, other.position);
+	float r = particleDistance(current, other);
 
 	if (r > h)
 		return 0.0f;

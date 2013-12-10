@@ -96,3 +96,12 @@ float RigidBody::rayTriangle(vec3 start, vec3 end, Triangle triangle){
 Particle::Particle(vec3 p){
   position = p;
 }
+
+void Particle::print() {
+  cout << "Particle" << endl;
+  cout << "\tPosition: " << position.x << ", " << position.y << ", " << position.z << endl;
+  cout << "\tVelocity: " << velocity.x << ", " << velocity.y << ", " << velocity.z << endl;
+  cout << "\tAcceleration: " << acceleration.x << ", " << acceleration.y << ", " << acceleration.z << endl;
+  cout << "\tPressure: " << pressure << endl;
+  cout << "\tDensity: " << density << endl;
+}
