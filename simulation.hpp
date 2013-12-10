@@ -15,7 +15,7 @@ using namespace glm;
 class FluidSimulation {
 public:
 	vector<vector<Particle> > gridCells;
-	vector<RigidBody> rigidBodies;
+	RigidBody cube;
 
 	vec3 gravity; // by default, set this to (0, -9.8, 0)
 	float timeStepSize; // the size of each timestep. the smaller, the more accurate.
