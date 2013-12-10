@@ -7,7 +7,7 @@
 
 #include "geometry.hpp"
 
-#define DEBUG false
+#define DEBUG true
 
 using namespace std;
 using namespace glm;
