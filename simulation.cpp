@@ -171,7 +171,7 @@ void FluidSimulation::elapseTimeGrid() {
 			bool collide = false;
 			float time = timeStepSize;
 
-			#if false
+			#if true
 				current.print();
 				cout << endl;
 			#endif
@@ -338,7 +338,7 @@ void FluidSimulation::drawTest(int dimension, int version){
 		}
 		else if(version == 2) {
 			particleMass = 0.02f;
-			float stepSize = 0.025;
+			float stepSize = 0.01;
 			for (float x = worldSize / -16.0f; x < worldSize / 16.0f; x += stepSize) {
 				for (float y = worldSize / -16.0f; y < worldSize / 16.0f; y += stepSize) {
 					for (float z = worldSize / -16.0f; z < worldSize / 16.0f; z += stepSize) {
