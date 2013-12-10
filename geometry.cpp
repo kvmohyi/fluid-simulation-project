@@ -1,4 +1,5 @@
 #include <vector>
+#include <utility> 
 
 #include <glm/glm.hpp>
 
@@ -13,8 +14,13 @@ Triangle::Triangle(vec3 va, vec3 vb, vec3 vc, vec3 n){
   c = vc;
   normal = n;
 }
+RigidBody::RigidBody(){
+}
 
-RigidBody::RigidBody(float length, float height, float depth){
+RigidBody::RigidBody(float l, float h, float d){
+  length = l;
+  height = h;
+  depth = d;
   float halfLength = length / 2.0;
   float halfHeight = height / 2.0;
   float halfDepth = depth / 2.0;
@@ -44,7 +50,7 @@ bool RigidBody::collision(vec3 start, vec3 end) {
   if(end.x > length / 2.0 || end.x < -1 * length / 2.0){
     return true;
   }
-  else if(end.y > height / 2.0 || end.y < -1 * length / 2.0){
+  else if(end.y > height / 2.0 || end.y < -1 * height / 2.0){
     return true;
   }
   else if(end.z > depth / 2.0 || end.z < -1 * depth / 2.0){
@@ -53,14 +59,16 @@ bool RigidBody::collision(vec3 start, vec3 end) {
   return false;
 }
 
-float RigidBody::collisionTime(vec3 start, vec3 end) {
+pair<float, vec3> RigidBody::collisionTimeNormal(vec3 start, vec3 end) {
   for (int s = 0; s < triangles.size(); s++){
     float time = rayTriangle(start, end, triangles[s]);
     if(time >= 0.0){
-      return time;
+      vec3 normal = triangles[s].normal;
+      pair <float, vec3> toReturn = make_pair(time, normal);
+      return toReturn;
     }
   }
-  return -1.0;
+  return make_pair(0.0, vec3(1.0, 0.0, 0.0));
 }
 
 float RigidBody::rayTriangle(vec3 start, vec3 end, Triangle triangle){

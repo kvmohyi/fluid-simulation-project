@@ -3,6 +3,10 @@
 
 #include <vector>
 
+#include <fstream>
+#include <sstream>
+#include <iostream>
+
 #include <glm/glm.hpp>
 
 using namespace std;
@@ -29,9 +33,10 @@ class RigidBody {
 public:
         float length, height, depth;
 	vector<Triangle> triangles;
-        RigidBody(float length, float height, float depth);
+        RigidBody(float l, float h, float d);
+        RigidBody();
 	bool collision(vec3 start, vec3 end);
-        float collisionTime(vec3 start, vec3 end);
+        pair<float, vec3> collisionTimeNormal(vec3 start, vec3 end);
         float rayTriangle(vec3 start, vec3 end, Triangle triangle);
 };
 

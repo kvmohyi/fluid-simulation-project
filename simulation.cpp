@@ -2,6 +2,7 @@
 #include <sstream>
 #include <iostream>
 #include <vector>
+#include <utility> 
 
 #include <glm/glm.hpp>
 
@@ -11,6 +12,8 @@
 
 using namespace std;
 using namespace glm;
+
+float dampFactor = 0.7;
 
 void FluidSimulation::instantiateFromFile(string file) {
 	std::ifstream inpfile(file.c_str());
@@ -73,7 +76,6 @@ void FluidSimulation::instantiateFromFile(string file) {
 		inpfile.close();
 	}
 }
-
 FluidSimulation::FluidSimulation(string file) {
 	instantiateFromFile(file);
 
@@ -89,6 +91,8 @@ FluidSimulation::FluidSimulation(string file) {
 	numIterations = 0;
 	// Set up the test case
 	drawTest(dimensions, testVersion);
+	cube = RigidBody((float)(worldSize) * 0.7, (float)(worldSize) * 0.7, (float)(worldSize) * 0.7);
+	cout << cube.length << endl;
 	// Verify program input
 	printParams();
 }
@@ -124,13 +128,32 @@ void FluidSimulation::elapseTimeGrid() {
 			vec3 viscosityForce(0.0f, 0.0f, 0.0f);
 			vec3 newPosition; // Position at t+1
 			vec3 newAcceleration; // Acceleration at t+1
+			vec3 newVelocity;
+			bool collide = false;
+			float time = timeStepSize;
 
 			// Advance position to time t+1 using leapfrog integration
 			// x_i+1 = x_i + v_i * delta_t + 0.5 * a_i * delta_t ^ 2
-			newPosition = current.position + current.velocity * timeStepSize + 0.5f * current.acceleration + pow(timeStepSize, 2.0f);
+			newPosition = current.position + current.velocity * time + 0.5f * current.acceleration + pow(time, 2.0f);
 
-			// Do collision detection here
-
+			if(cube.collision(current.position, newPosition)){
+			  collide = true;
+			  cout << "collision" << endl;
+			  pair<float, vec3> timeAndNormal = cube.collisionTimeNormal(current.position, newPosition);
+			  cout << "normal " << timeAndNormal.second.x << " " << timeAndNormal.second.y << " " << timeAndNormal.second.z << endl;
+			  cout << "dot " << dot(current.velocity, timeAndNormal.second) << endl;
+			    vec3 currVelocity = current.velocity;
+			    vec3 reflectVelocity = currVelocity - 2 * dot(currVelocity, timeAndNormal.second) * timeAndNormal.second;
+			    cout << "reflective Velocity: " << reflectVelocity.x << " " << reflectVelocity.y << " " << reflectVelocity.z << endl;
+			    current.velocity = reflectVelocity;
+			    newVelocity = reflectVelocity;
+			    float newTime = timeStepSize - timeAndNormal.first * timeStepSize;
+			    time = newTime;
+			    vec3 collideLoc = current.position + (newPosition - current.position) * timeAndNormal.first;
+			    newPosition = collideLoc + dampFactor * reflectVelocity * time;// + 0.5f * current.acceleration + pow(time, 2.0f);
+			    cout << "newPosition " << newPosition.x << " " << newPosition.y << " " << newPosition.z << endl;
+			    
+			}
 			current.position = newPosition;
 
 			int offsets[] = {-1, 1};
@@ -168,8 +191,9 @@ void FluidSimulation::elapseTimeGrid() {
 
 			// Advance velocity to time t+1 using leapfrog integration
 			// v_i+1 = v_i + 0.5 * (a_i + a_i+1) * delta_t
-			current.velocity = current.velocity + 0.5f * (current.acceleration + newAcceleration) * timeStepSize;
-
+			newVelocity = current.velocity + 0.5f * (current.acceleration + newAcceleration) * time;
+			
+			current.velocity = newVelocity;
 			// Advance acceleration to time t+1
 			current.acceleration = newAcceleration;
 
