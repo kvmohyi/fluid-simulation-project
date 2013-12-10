@@ -94,8 +94,8 @@ FluidSimulation::FluidSimulation(string file) {
 	// Instantiate the "3D" grid of cells
 	gridCells.resize(numGrids * numGrids * numGrids);
 	// Set gravity here
-	//gravity = vec3(0.0f, -9.8f, 0.0f);
-	gravity = vec3(0.0f, 0.0f, 0.0f);
+	gravity = vec3(0.0f, -9.8f, 0.0f);
+	//gravity = vec3(0.0f, 0.0f, 0.0f);
 	// Initialize the iteration count
 	numIterations = 0;
 	numParticles = 0;
@@ -167,9 +167,7 @@ void FluidSimulation::elapseTimeGrid() {
 			vec3 surfaceTensionForce(0.0f, 0.0f, 0.0f);
 			vec3 inwardSurfaceNormal(0.0f, 0.0f, 0.0f);
 			float colorFieldLaplacian = 0.0f;
-			vec3 newPosition; // Position at t+1
-			vec3 newAcceleration; // Acceleration at t+1
-			vec3 newVelocity; // Velocity at t+1
+			vec3 acceleration;
 			bool collide = false;
 			float time = timeStepSize;
 
@@ -245,19 +243,17 @@ void FluidSimulation::elapseTimeGrid() {
 			}
 			// else leave it as the zero vector
 
+			acceleration = (current.density * gravity + pressureForce + viscosityForce + surfaceTensionForce) / current.density;
 			
+			vec3 oldVelocity; // v at t-0.5
+			if (numIterations > 0)
+				oldVelocity = current.nextVelocity;
+			else
+				oldVelocity = current.nextVelocity - 0.5f * timeStepSize * acceleration;
 
-			newAcceleration = (current.density * gravity + pressureForce + viscosityForce + surfaceTensionForce) / current.density;
-			current.acceleration = newAcceleration;
+			current.nextVelocity = current.prevVelocity + timeStepSize * acceleration;
 
-			newVelocity = current.velocity + timeStepSize * current.acceleration;
-			newPosition = current.position + timeStepSize * newVelocity;
-
-			//newVelocity = current.velocity + timeStepSize * newAcceleration;
-			//newPosition = current.position + timeStepSize * newVelocity + 0.5f * timeStepSize * timeStepSize * newAcceleration;
-			
-			current.position = newPosition;
-			current.velocity = newVelocity;
+			current.position = current.position + timeStepSize * current.nextVelocity;
 
 			int newIndex = mapToIndex(current);
 			if (newIndex < 0 || newIndex >= gridCells.size())

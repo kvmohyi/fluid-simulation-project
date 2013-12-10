@@ -126,8 +126,8 @@ vec3 pressureForcePartial(Particle& current, Particle& other, float particleMass
 }
 
 vec3 viscosityForcePartial(Particle& current, Particle& other, float timeStepSize, float viscosityConstant, float particleMass, float h) {
-	vec3 currentAvgVelocity = (current.velocity + current.velocity + timeStepSize * current.acceleration) / 2.0f;
-	vec3 otherAvgVelocity = (other.velocity + other.velocity + timeStepSize * other.acceleration) / 2.0f;
+	vec3 currentAvgVelocity = (current.nextVelocity + current.prevVelocity) / 2.0f;
+	vec3 otherAvgVelocity = (other.nextVelocity + other.prevVelocity) / 2.0f;
 
 	return viscosityConstant * particleMass * (otherAvgVelocity - currentAvgVelocity) / other.density * viscosityKernelLaplacian(current, other, h);
 }

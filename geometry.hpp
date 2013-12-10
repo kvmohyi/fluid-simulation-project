@@ -17,8 +17,8 @@ public:
 	float density;
 	float pressure;
 	vec3 position;
-	vec3 velocity;
-	vec3 acceleration;
+	vec3 nextVelocity; // the future half time step (prediction)
+	vec3 prevVelocity; // the past half time step
     Particle(vec3 _position);
     void print();
 };

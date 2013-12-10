@@ -100,8 +100,8 @@ Particle::Particle(vec3 p){
 void Particle::print() {
   cout << "Particle" << endl;
   cout << "\tPosition: " << position.x << ", " << position.y << ", " << position.z << endl;
-  cout << "\tVelocity: " << velocity.x << ", " << velocity.y << ", " << velocity.z << endl;
-  cout << "\tAcceleration: " << acceleration.x << ", " << acceleration.y << ", " << acceleration.z << endl;
+  cout << "\tprevVelocity: " << prevVelocity.x << ", " << prevVelocity.y << ", " << prevVelocity.z << endl;
+  cout << "\tnextVelocity: " << nextVelocity.x << ", " << nextVelocity.y << ", " << nextVelocity.z << endl;
   cout << "\tPressure: " << pressure << endl;
   cout << "\tDensity: " << density << endl;
 }
