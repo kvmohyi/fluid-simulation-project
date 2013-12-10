@@ -84,7 +84,7 @@ FluidSimulation::FluidSimulation(string file) {
 	// Instantiate the 3D grid of cells
 	gridCells.resize(numGrids * numGrids * numGrids);
 	// Set gravity here
-	gravity = vec3(0.0f, -0.05f, 0.0f);
+	gravity = vec3(0.0f, 0.0f, 0.0f);
 	// Initialize the iteration count
 	numIterations = 0;
 	// Set up the test case
@@ -104,15 +104,15 @@ void FluidSimulation::elapseTimeGrid() {
 			for (size_t  j_cell = 0; j_cell < gridCells.size(); j_cell++) {
 				for (size_t j = 0; j < gridCells[j_cell].size(); j++) {
 					Particle& other = gridCells[j_cell][j];
-					current.density += poly6Kernel(current, other, localRadius);
+					current.density += particleMass * poly6Kernel(current, other, localRadius);
 				}
 			}
-
-			current.density *= particleMass;
-
 			//current.pressure = gasConstant * (pow(current.massDensity * particleMass / restDensity, 7.0f) - 1.0f);
 
 			current.pressure = gasConstant * (current.density - restDensity);
+			#if true
+			cout << current.pressure << endl;
+			#endif
 		}
 	}
 
@@ -123,15 +123,22 @@ void FluidSimulation::elapseTimeGrid() {
 			vec3 pressureForce(0.0f, 0.0f, 0.0f);
 			vec3 viscosityForce(0.0f, 0.0f, 0.0f);
 			vec3 newPosition; // Position at t+1
+			vec3 newVelocity;
 			vec3 newAcceleration; // Acceleration at t+1
 
 			// Advance position to time t+1 using leapfrog integration
 			// x_i+1 = x_i + v_i * delta_t + 0.5 * a_i * delta_t ^ 2
-			newPosition = current.position + current.velocity * timeStepSize + 0.5f * current.acceleration + pow(timeStepSize, 2.0f);
+			//newPosition = current.position + current.velocity * timeStepSize + 0.5f * current.acceleration + pow(timeStepSize, 2.0f);
+
+			newVelocity = current.velocity + timeStepSize * current.acceleration;
+			current.velocity = newVelocity;
 
 			// Do collision detection here
 
+			newPosition = current.position + timeStepSize * newVelocity;
 			current.position = newPosition;
+
+			//current.position = newPosition;
 
 			int offsets[] = {-1, 1};
 
@@ -149,9 +156,9 @@ void FluidSimulation::elapseTimeGrid() {
 						for (size_t j = 0; j < gridCells[index].size(); j++) {
 							Particle& other = gridCells[index][j];
 							// Force from pressure
-							pressureForce += pressureForcePartial(current, other, localRadius);
+							pressureForce += pressureForcePartial(current, other, particleMass, localRadius);
 							// Force from viscosity
-							viscosityForce += viscosityForcePartial(current, other, localRadius);
+							viscosityForce += viscosityForcePartial(current, other, viscosityConstant, particleMass, localRadius);
 						}
 					}
 				}
@@ -159,19 +166,16 @@ void FluidSimulation::elapseTimeGrid() {
 
 			//cout << "got here" << endl;
 
-			pressureForce *= particleMass;
-			viscosityForce *= viscosityConstant * particleMass;
-
 			//cout << "Pressure Force: " << pressureForce.x << ", " << pressureForce.y << ", " << pressureForce.z << endl;
 
-			newAcceleration = (current.density * gravity + pressureForce /*+ viscosityForce*/) / current.density;
-
+			newAcceleration = (current.density * gravity + pressureForce + viscosityForce) / current.density;
+			current.acceleration = new Acceleration;
 			// Advance velocity to time t+1 using leapfrog integration
 			// v_i+1 = v_i + 0.5 * (a_i + a_i+1) * delta_t
-			current.velocity = current.velocity + 0.5f * (current.acceleration + newAcceleration) * timeStepSize;
+			//current.velocity = current.velocity + 0.5f * (current.acceleration + newAcceleration) * timeStepSize;
 
 			// Advance acceleration to time t+1
-			current.acceleration = newAcceleration;
+			//current.acceleration = newAcceleration;
 
 			//cout << "Acceleration: " << current.acceleration.x << ", " << current.acceleration.y << ", " << current.acceleration.z << endl;
 

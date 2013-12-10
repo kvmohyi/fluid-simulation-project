@@ -11,12 +11,10 @@
 using namespace std;
 using namespace glm;
 
-/*float radius = 10.0;
-
 float sqr(float x) {
   return x * x;
 }
-
+/*
 vec3 gradient_gaussian_smoothing(Particle particle, Particle other){
 	float r = glm::distance(particle.position, other.position);
 	if (r > radius) {
@@ -71,50 +69,60 @@ vec3 force = gradient2_gaussian_smoothing(particle, other) * diffVelocity;
 return force;
 }*/
 
-// Use this one for presure
-float spikyKernel(Particle current, Particle other, float h) {
-	float r = glm::distance(current.position, other.position);
+float particleDistance(Particle current, Particle other) {
+	return sqrt(sqr(current.position.x - other.position.x)
+			  + sqr(current.position.y - other.position.y)
+			  + sqr(current.position.z - other.position.z));
+}
 
-	if (r < 0.0f || r > h)
+float spikyKernel(Particle current, Particle other, float h) {
+	float r = particleDistance(current, other);
+
+	if (r > h)
 		return 0.0f;
 
 	return 15.0f / (PI * pow(h, 6.0f)) * pow((h - r), 3.0f);
 }
 
+// Use this kernel for pressure
 vec3 spikyKernelGradient(Particle current, Particle other, float h) {
-	float r = glm::distance(current.position, other.position);
+	float r = particleDistance(current, other);
 
-	return -45.0f * (other.position - current.position) / (PI * pow(h, 6.0f) * r) * pow(h - r, 2.0f);
+
+	if (r > h)
+		return vec3(0.0f, 0.0f, 0.0f);
+
+	// it is current.position - other.position according to kelager p.18
+	return -45.0f * (current.position - other.position) / (PI * pow(h, 6.0f) * r) * pow(h - r, 2.0f);
 }
 
 float viscosityKernel(Particle current, Particle other, float h) {
-	float r = glm::distance(current.position, other.position);
+	float r = particleDistance(current, other);
 
-	if (r < 0.0f || r > h)
+	if (r > h)
 		return 0.0f;
 
 	return 15.0f / (2.0f * PI * pow(h, 3.0f)) * (pow(r, 3.0f) / (-2.0f * pow(h, 3.0f)) + pow(r, 2.0f) / pow(h, 2.0f) + h / (2.0f * r) - 1.0f);
 }
 
 float viscosityKernelLaplacian(Particle current, Particle other, float h) {
-	45.0f / (PI * pow(h, 6.0f)) * (h - glm::distance(current.position, other.position));
+	return 45.0f / (PI * pow(h, 6.0f)) * (h - particleDistance(current, other));
 }
 
+// The default kernel
 float poly6Kernel(Particle current, Particle other, float h) {
 	float r = glm::distance(current.position, other.position);
 
-	if (r < 0.0f || r > h)
+	if (r > h)
 		return 0.0f;
 
 	return 315.0f / (64.0f * PI * pow(h, 9.0f)) * pow(pow(h, 2.0f) - pow(r, 2.0f), 3.0f);
 }
 
-// This does not include the mass multiplier
-vec3 pressureForcePartial(Particle current, Particle other, float h) {
-	return -1.0f * (current.density + other.density) / (2.0f * other.density) * spikyKernelGradient(current, other, h);
+vec3 pressureForcePartial(Particle current, Particle other, float particleMass, float h) {
+	return -1.0f * particleMass * (current.pressure + other.pressure) / (2.0f * other.density) * spikyKernelGradient(current, other, h);
 }
 
-// This does not include the mass and viscosity constant multipliers
-vec3 viscosityForcePartial(Particle current, Particle other, float h) {
-	return (other.velocity - current.velocity) / other.density * viscosityKernelLaplacian(current, other, h);
+vec3 viscosityForcePartial(Particle current, Particle other, float viscosityConstant, float particleMass, float h) {
+	return viscosityConstant * particleMass * (other.velocity - current.velocity) / other.density * viscosityKernelLaplacian(current, other, h);
 }

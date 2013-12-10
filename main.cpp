@@ -112,11 +112,13 @@ void myDisplay2D() {
 
       for (size_t cell = 0; cell < gridCells.size(); cell++) {
         for (size_t i = 0; i < gridCells[cell].size(); i++) {
+          #if false
           cout << "Iteration " << fluidsim->numIterations << ", Time " << fluidsim->numIterations * fluidsim->timeStepSize << endl;
           cout << "Position: " << gridCells[cell][i].position.x << ", " << gridCells[cell][i].position.y << ", " << gridCells[cell][i].position.z << endl;
           cout << "Velocity: " << gridCells[cell][i].velocity.x << ", " << gridCells[cell][i].velocity.y << ", " << gridCells[cell][i].velocity.z << endl;
           cout << "Acceleration: " << gridCells[cell][i].acceleration.x << ", " << gridCells[cell][i].acceleration.y << ", " << gridCells[cell][i].acceleration.z << endl;
           cout << endl;
+          #endif
           glPushMatrix();
             glTranslatef(gridCells[cell][i].position.x, gridCells[cell][i].position.y, gridCells[cell][i].position.z);
             glutSolidSphere(0.01, 20, 20);
