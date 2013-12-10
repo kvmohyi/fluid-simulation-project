@@ -20,16 +20,19 @@ public:
 
 class Triangle {
 public:
-	vec3 a, b, c, d;
+	vec3 a, b, c;
 	vec3 normal;
+        Triangle(vec3 a, vec3 b, vec3 c, vec3 normal);
 };
 
 class RigidBody {
 public:
+        float length, height, depth;
 	vector<Triangle> triangles;
-	vec3 normal;
-
+        RigidBody(float length, float height, float depth);
 	bool collision(vec3 start, vec3 end);
+        float collisionTime(vec3 start, vec3 end);
+        float rayTriangle(vec3 start, vec3 end, Triangle triangle);
 };
 
 #endif
