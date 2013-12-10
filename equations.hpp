@@ -16,7 +16,9 @@ vec3 force_viscosity(Particle particle, Particle other, float particleMasss);*/
 vec3 pressureForcePartial(Particle current, Particle other, float h);
 vec3 viscosityForcePartial(Particle current, Particle other, float h);
 float spikyKernel(Particle current, Particle other, float h);
+float spikyKernelGradient(Particle current, Particle other, float h);
 float viscosityKernel(Particle current, Particle other, float h);
+float viscosityKernelLaplacian(Particle current, Particle other, float h);
 float poly6Kernel(Particle current, Particle other, float h);
 
 #endif

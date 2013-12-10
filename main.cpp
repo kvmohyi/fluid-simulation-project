@@ -28,6 +28,8 @@ static DWORD lastTime;
 static struct timeval lastTime;
 #endif
 
+#define WAIT_KEY true
+
 using namespace std;
 
 //****************************************************
@@ -44,6 +46,7 @@ class Viewport {
 //****************************************************
 Viewport viewport;
 FluidSimulation* fluidsim = NULL;
+bool continueSimulation = false;
 
 //****************************************************
 // reshape viewport if the window is resized
@@ -64,8 +67,8 @@ void myReshape(int w, int h) {
   // glOrtho(-w/400.0, w/400.0, -h/400.0, h/400.0, 1, -1); // resize type = center
 
   //glOrtho(-1, 1, -1, 1, 1, -1);    // resize type = stretch
-  gluPerspective(90.0, 1.0, 0.0, 10.0);
-  gluLookAt(0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+  gluPerspective(90.0, (float)viewport.w/(float)viewport.h, 0.1, 100.0);
+  //gluLookAt(0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
   //------------------------------------------------------------
 }
 
@@ -87,7 +90,7 @@ void initScene(){
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
   glEnable(GL_DEPTH_TEST);
-  myReshape(viewport.w,viewport.h);
+  //myReshape(viewport.w,viewport.h);
 }
 
 
@@ -95,35 +98,41 @@ void initScene(){
 // function that does the actual drawing
 //***************************************************
 void myDisplay2D() {
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  if (continueSimulation) {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glPushMatrix();
+      glTranslatef(0.0f, 0.0f, -1.0f);
 
-  glScalef(2.0f / fluidsim->worldSize, 2.0f / fluidsim->worldSize, 2.0f / fluidsim->worldSize);
+      glScalef(1.0f / fluidsim->worldSize, 1.0f / fluidsim->worldSize, 1.0f / fluidsim->worldSize);
 
-  glColor3f(0.0f,0.0f,1.0f);
+      vector<vector<Particle> >& gridCells = fluidsim->particleList();
 
-  vector<vector<Particle> >& gridCells = fluidsim->particleList();
+      for (size_t cell = 0; cell < gridCells.size(); cell++) {
+        for (size_t i = 0; i < gridCells[cell].size(); i++) {
+          cout << "Iteration " << fluidsim->numIterations << ", Time " << fluidsim->numIterations * fluidsim->timeStepSize << endl;
+          cout << "Position: " << gridCells[cell][i].position.x << ", " << gridCells[cell][i].position.y << ", " << gridCells[cell][i].position.z << endl;
+          cout << "Velocity: " << gridCells[cell][i].velocity.x << ", " << gridCells[cell][i].velocity.y << ", " << gridCells[cell][i].velocity.z << endl;
+          cout << "Acceleration: " << gridCells[cell][i].acceleration.x << ", " << gridCells[cell][i].acceleration.y << ", " << gridCells[cell][i].acceleration.z << endl;
+          cout << endl;
+          glPushMatrix();
+            glTranslatef(gridCells[cell][i].position.x, gridCells[cell][i].position.y, gridCells[cell][i].position.z);
+            glutSolidSphere(0.01, 20, 20);
+          glPopMatrix();
+        }
+      }
 
-  for (size_t cell = 0; cell < gridCells.size(); cell++) {
-    for (size_t i = 0; i < gridCells[cell].size(); i++) {
-      glPushMatrix();
-        #if DEBUG
-          cout << "Velocity at time=" << fluidsim->numIterations * fluidsim->timeStepSize << ": <" 
-          << gridCells[cell][i].velocity.x << ", " << gridCells[cell][i].velocity.y << ", " << gridCells[cell][i].velocity.z << ">" << endl;
-        #endif
-        glTranslatef(gridCells[cell][i].position.x, gridCells[cell][i].position.y, gridCells[cell][i].position.z);
-        glutSolidSphere(0.01, 20, 20);
-      glPopMatrix();
-    }
+    glPopMatrix();
+
+    glFlush();
+    glutSwapBuffers();
+
+    fluidsim->elapseTimeGrid();
+    //cout << "derp" << endl;
+    continueSimulation = false;
   }
-
-  glFlush();
-  glutSwapBuffers();
-
-  fluidsim->elapseTimeGrid();
-  //cout << "derp" << endl;
 }
 
 
@@ -137,7 +146,10 @@ void myFrameMove() {
 #endif
   glutPostRedisplay(); // forces glut to call the display function (myDisplay())
 }
-		  
+
+void keyPressed (unsigned char key, int x, int y) {  
+  continueSimulation = true; 
+} 
 
 //****************************************************
 // the usual stuff, nothing exciting here
@@ -166,6 +178,7 @@ int main(int argc, char *argv[]) {
   glutDisplayFunc(myDisplay2D);                  // function to run when its time to draw something
   glutReshapeFunc(myReshape);                  // function to run when the window gets resized
   glutIdleFunc(myFrameMove);                   // function to run when not handling any other task
+  glutKeyboardFunc(keyPressed);
   glutMainLoop();                              // infinite loop that will keep drawing and resizing and whatever else
 
   return 0;
