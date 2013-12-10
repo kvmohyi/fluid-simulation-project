@@ -111,7 +111,7 @@ float poly6Kernel(Particle current, Particle other, float h) {
 
 // This does not include the mass multiplier
 vec3 pressureForcePartial(Particle current, Particle other, float h) {
-	return -1.0f * (current.density + other.density) / (2 * other.density) * spikyKernelGradient(current, other, h);
+	return -1.0f * (current.density + other.density) / (2.0f * other.density) * spikyKernelGradient(current, other, h);
 }
 
 // This does not include the mass and viscosity constant multipliers

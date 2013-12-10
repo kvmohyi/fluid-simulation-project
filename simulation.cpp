@@ -164,7 +164,7 @@ void FluidSimulation::elapseTimeGrid() {
 
 			//cout << "Pressure Force: " << pressureForce.x << ", " << pressureForce.y << ", " << pressureForce.z << endl;
 
-			newAcceleration = (current.density * gravity /*+ pressureForce + viscosityForce*/) / current.density;
+			newAcceleration = (current.density * gravity + pressureForce /*+ viscosityForce*/) / current.density;
 
 			// Advance velocity to time t+1 using leapfrog integration
 			// v_i+1 = v_i + 0.5 * (a_i + a_i+1) * delta_t
