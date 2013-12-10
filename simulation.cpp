@@ -87,7 +87,7 @@ FluidSimulation::FluidSimulation(string file) {
 	// Instantiate the 3D grid of cells
 	gridCells.resize(numGrids * numGrids * numGrids);
 	// Set gravity here
-	gravity = vec3(0.0f, 0.0f, 0.0f);
+	gravity = vec3(0.0f, -9.8f, 0.0f);
 	// Initialize the iteration count
 	numIterations = 0;
 	// Set up the test case
@@ -137,6 +137,9 @@ void FluidSimulation::elapseTimeGrid() {
 			// x_i+1 = x_i + v_i * delta_t + 0.5 * a_i * delta_t ^ 2
 			//newPosition = current.position + current.velocity * timeStepSize + 0.5f * current.acceleration + pow(timeStepSize, 2.0f);
 
+			newVelocity = current.velocity + timeStepSize * current.acceleration;
+			newPosition = current.position + timeStepSize * newVelocity;
+
 			if(cube.collision(current.position, newPosition)){
 			  collide = true;
 			  cout << "collision" << endl;
@@ -155,9 +158,10 @@ void FluidSimulation::elapseTimeGrid() {
 			    cout << "newPosition " << newPosition.x << " " << newPosition.y << " " << newPosition.z << endl;
 			    
 			}
-			current.position = newPosition;
-
-			//current.position = newPosition;
+			else {
+				current.position = newPosition;
+				current.velocity = newVelocity;
+			}
 
 			int offsets[] = {-1, 1};
 
@@ -187,8 +191,8 @@ void FluidSimulation::elapseTimeGrid() {
 
 			//cout << "Pressure Force: " << pressureForce.x << ", " << pressureForce.y << ", " << pressureForce.z << endl;
 
-			newAcceleration = (current.density * gravity + pressureForce + viscosityForce) / current.density;
-			current.acceleration = new Acceleration;
+			newAcceleration = (current.density * gravity /*+ pressureForce + viscosityForce*/) / current.density;
+			current.acceleration = newAcceleration;
 			// Advance velocity to time t+1 using leapfrog integration
 			// v_i+1 = v_i + 0.5 * (a_i + a_i+1) * delta_t
 			//current.velocity = current.velocity + 0.5f * (current.acceleration + newAcceleration) * timeStepSize;
@@ -198,9 +202,9 @@ void FluidSimulation::elapseTimeGrid() {
 
 			//cout << "Acceleration: " << current.acceleration.x << ", " << current.acceleration.y << ", " << current.acceleration.z << endl;
 
-			int newIndex = mapToIndex(current);
+			/*int newIndex = mapToIndex(current);
 			if (newIndex < 0 || newIndex >= gridCells.size())
-				continue;
+				continue;*/
 			newGridCells[mapToIndex(current)].push_back(current);
 		}
 	}
