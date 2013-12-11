@@ -260,6 +260,8 @@ void FluidSimulation::elapseTimeGrid() {
 			  //cout << "Collision Velocity " << newVelocity.x << " " << newVelocity.y << " " << newVelocity.z << endl;;
 			  newParticle.currentVelocity = newVelocity;
 			  newParticle.position = collisionPoint + (timeStepSize - timeStep) * newParticle.currentVelocity;
+			  newParticle.prevVelocity = newParticle.currentVelocity - 0.5f * timeStep * acceleration;
+			  //cout << "newPosition " << newParticle.position.x << " " << newParticle.position.y << " " << newParticle.position.z << endl;
 			}
 
 			int newIndex = mapToIndex(newParticle);
