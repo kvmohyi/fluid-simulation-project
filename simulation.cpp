@@ -87,23 +87,24 @@ void FluidSimulation::instantiateFromFile(string file) {
 }
 
 FluidSimulation::FluidSimulation(string file) {
-	instantiateFromFile(file);
-
-	// Number of grids such that each grid cell is greater than the 2 * radius of support
-	numGrids = ceil(worldSize / (2 * localRadius));
-	// gridSize > 2 * localRadius
-	gridSize = worldSize / numGrids;
-	// Instantiate the "3D" grid of cells
-	gridCells.resize(numGrids * numGrids * numGrids);
-	// Set gravity here
-	// Initialize the iteration count
+	worldSize = 2.0f;
+	timeStepSize = 0.01;
 	numIterations = 0;
 	numParticles = 0;
-	// Set up the test case
+	localRadius = 0.0625;
+	numGrids = ceil(worldSize / (2.0f * localRadius));
+	gridSize = worldSize / numGrids;
+	gridCells.resize(numGrids * numGrids * numGrids);
+	restDensity = 1000;
+	viscosityConstant = 3.5;
+	gasConstant = 3.0;
+	tensionConstant = 0.0728;
+	tensionThreshold = 7.065;
+	testVersion = 4;
+	dimensions = 3;
+	//instantiateFromFile(file);
 	drawTest(dimensions, testVersion);
 	cube = RigidBody(worldSize * .75, worldSize * .75, worldSize * .75);
-	//cout << cube.length << endl;
-	// Verify the parameters
 	printParams();
 }
 
@@ -117,7 +118,6 @@ void FluidSimulation::elapseTimeGrid() {
 
 			int offsets[] = {-1, 0, 1};
 
-			#pragma omp parallel for
 			for (int z_offset = 0; z_offset < 3; z_offset++) {
 				for (int y_offset = 0; y_offset < 3; y_offset++) {
 					for (int x_offset = 0; x_offset < 3; x_offset++) {
@@ -167,7 +167,6 @@ void FluidSimulation::elapseTimeGrid() {
 
 			int offsets[] = {-1, 0, 1};
 
-			#pragma omp parallel for
 			for (int z_offset = 0; z_offset < 3; z_offset++) {
 				for (int y_offset = 0; y_offset < 3; y_offset++) {
 					for (int x_offset = 0; x_offset < 3; x_offset++) {
@@ -181,14 +180,18 @@ void FluidSimulation::elapseTimeGrid() {
 
 						for (size_t j = 0; j < gridCells[index].size(); j++) {
 							Particle& other = gridCells[index][j];
-
-							// if i == j, then skip it
-							if (index == i_cell && i == j)
-								continue;
 							
 							float r = particleDistance(current, other);
 
 							if (r > localRadius)
+								continue;
+
+							// Surface tension yay!
+							inwardSurfaceNormal += inwardSurfaceNormalPartial(current, other, particleMass, localRadius);
+							colorFieldLaplacian += colorFieldLaplacianPartial(current, other, particleMass, localRadius);
+
+							// if i == j, then skip it
+							if (index == i_cell && i == j)
 								continue;
 
 							// Force from pressure
@@ -196,9 +199,6 @@ void FluidSimulation::elapseTimeGrid() {
 							//cout << "Pressure Force: " << pressureForce.x << ", " << pressureForce.y << ", " << pressureForce.z << endl;
 							// Force from viscosity
 							viscosityForce += viscosityForcePartial(current, other, timeStepSize, viscosityConstant, particleMass, localRadius);
-							// Surface tension yay!
-							inwardSurfaceNormal += inwardSurfaceNormalPartial(current, other, particleMass, localRadius);
-							colorFieldLaplacian += colorFieldLaplacianPartial(current, other, particleMass, localRadius);
 						}
 					}
 				}
@@ -407,11 +407,12 @@ void FluidSimulation::drawTest(int dimension, int version) {
 
 		for (float x = sideSize / -2.0f; x < sideSize / 2.0f; x += stepSize) {
 			for (float y = sideSize / -2.0f; y < sideSize / 2.0f; y += stepSize) {
-				for (float z = sideSize / -2.0f; z < sideSize / 2.0f; z += stepSize) {
-					vec3 position(x, y, z);
+				vec3 position(x, y, 0.0f);
 					Particle particle(position);
 					gridCells[mapToIndex(particle)].push_back(particle);
 					numParticles++;
+				for (float z = sideSize / -2.0f; z < sideSize / 2.0f; z += stepSize) {
+					
 				}
 			}
 		}
