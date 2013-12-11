@@ -305,23 +305,25 @@ int FluidSimulation::mapToIndex(Particle particle, int x_offset, int y_offset, i
 int FluidSimulation::mapToIndex(int x, int y, int z) {
 	return x + numGrids * (y + numGrids * z);
 }
+  
 
-void FluidSimulation::drawWaterShape(int numParticles, float xStart, float yStart, float zStart, float xEnd, float yEnd, float zEnd){
+void FluidSimulation::drawWaterShape(int n, float xStart, float yStart, float zStart, float xEnd, float yEnd, float zEnd, vec3 velocity){
 	float length = xEnd - xStart;
 	float width = yEnd- yStart;
 	float depth = zEnd - zStart;
 
-	if(depth == 0.0){
+	if(abs(depth) < 0.1){
 		float area = length * width;
-		particleMass = area * restDensity / numParticles;
-		float spacing = sqrt(numParticles / area);
-		float step = 1 / spacing;		
-		for(float x = xStart; x < xEnd; x += step)
+		particleMass = area * restDensity / n;
+		float ratio = length / width;
+		float particlesWidth = pow((float)n / ratio, 1.0f / 2.0f);
+		float spacing = width / particlesWidth;
+		for(float x = xStart; x < xEnd; x += spacing)
 		{
-			for(float y = yStart; y < yEnd; y += step)
+			for(float y = yStart; y < yEnd; y += spacing)
 			{
 				vec3 position = vec3(x, y, 0);
-				Particle particle = Particle(position);
+				Particle particle = Particle(position, velocity);
 				int index = mapToIndex(particle);
 				gridCells[index].push_back(particle);
 			}
@@ -329,17 +331,19 @@ void FluidSimulation::drawWaterShape(int numParticles, float xStart, float yStar
 	}						
 	else {		
 		float volume = length * width * depth;
-		particleMass = volume * restDensity / numParticles;
-		float spacing = pow(numParticles / volume, 1.0f / 3.0f);
-		float step = 1/spacing;
-		for(float x = xStart; x < xEnd; x += step)
+		particleMass = volume * restDensity / n;
+		float ratioY = width / length;
+		float ratioZ = depth / length;
+		float particlesLength = pow((float) n / (ratioY * ratioZ), 1.0f / 3.0f);
+		float spacing = length / particlesLength;
+		for(float x = xStart; x < xEnd; x += spacing)
 		{	
-			for(float y = yStart; y < yEnd; y += step)
+			for(float y = yStart; y < yEnd; y += spacing)
 			{	
-				for(float z = zStart; z < zEnd; z += step)
+				for(float z = zStart; z < zEnd; z += spacing)
 				{
 					vec3 position = vec3(x, y, z);
-					Particle particle = Particle(position);
+					Particle particle = Particle(position, velocity);
 					int index = mapToIndex(particle);
 					gridCells[index].push_back(particle);
 				}
