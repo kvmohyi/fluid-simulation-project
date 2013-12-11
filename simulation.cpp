@@ -248,6 +248,7 @@ void FluidSimulation::elapseTimeGrid() {
 			
 			vec3 oldVelocity; // v at t-0.5
 			if (numIterations == 0){
+			  cout << "hello?" << endl;
 			  current.nextVelocity = vec3(0.0, -10.0, 0.0);
 			  /*
 				oldVelocity = current.nextVelocity - 0.5f * timeStepSize * acceleration;
