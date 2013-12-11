@@ -15,7 +15,7 @@
 using namespace std;
 using namespace glm;
 
-float dampFactor = 0.7;
+float dampFactor = 0.5;
 
 void FluidSimulation::instantiateFromFile(string file) {
 	std::ifstream inpfile(file.c_str());
@@ -95,14 +95,12 @@ FluidSimulation::FluidSimulation(string file) {
 	// Instantiate the "3D" grid of cells
 	gridCells.resize(numGrids * numGrids * numGrids);
 	// Set gravity here
-	//gravity = vec3(0.0f, -9.8f, 0.0f);
-	gravity = vec3(0.0f, 0.0f, 0.0f);
 	// Initialize the iteration count
 	numIterations = 0;
 	numParticles = 0;
 	// Set up the test case
 	drawTest(dimensions, testVersion);
-	cube = RigidBody(worldSize, worldSize, worldSize);
+	cube = RigidBody(worldSize * .75, worldSize * .75, worldSize * .75);
 	//cout << cube.length << endl;
 	// Verify the parameters
 	printParams();
@@ -134,6 +132,7 @@ void FluidSimulation::elapseTimeGrid() {
 							if (r > localRadius)
 								continue;
 
+							cout << "DERP" << endl;
 							current.density += particleMass * poly6Kernel(current, other, localRadius);
 						}
 					}
@@ -238,6 +237,31 @@ void FluidSimulation::elapseTimeGrid() {
 
 			Particle newParticle(nextPosition, nextCurrentVelocity, nextPrevVelocity, current.density, current.pressure);
 
+			if (cube.collision(current.position, newParticle.position)) {
+			  //cout << "collision"  << endl;
+			  pair<float, vec3> timeNormal = cube.collisionTimeNormal(current.position, newParticle.position);
+			  float timeStep = timeStepSize * timeNormal.first;
+
+			  vec3 collisionPoint = current.position + timeNormal.first * (newParticle.position - current.position);
+
+			  Particle collisionParticle = Particle(collisionPoint);
+
+			  float depth = sqrt(sqr(newParticle.position.x - collisionParticle.position.x)
+			  + sqr(newParticle.position.y - collisionParticle.position.y)
+			  + sqr(newParticle.position.z - collisionParticle.position.z));
+
+			  //cout << "depth" << depth << endl;
+			  float rayDistance = sqrt(sqr(newParticle.position.x - current.position.x)
+			  + sqr(newParticle.position.y - current.position.y)
+			  + sqr(newParticle.position.z - current.position.z));
+
+			  //cout << "rayDistance" << rayDistance << endl;
+			  vec3 newVelocity = current.currentVelocity - (1 + dampFactor * depth / (rayDistance)) * dot(current.currentVelocity, timeNormal.second) * timeNormal.second;
+			  //cout << "Collision Velocity " << newVelocity.x << " " << newVelocity.y << " " << newVelocity.z << endl;;
+			  newParticle.currentVelocity = newVelocity;
+			  newParticle.position = collisionPoint + (timeStepSize - timeStep) * newParticle.currentVelocity;
+			}
+
 			int newIndex = mapToIndex(newParticle);
 			if (newIndex < 0 || newIndex >= gridCells.size())
 				continue;
@@ -316,17 +340,22 @@ void FluidSimulation::drawWaterShape(int numParticles, float xStart, float yStar
 	numIterations++;
 }
 void FluidSimulation::drawTest(int dimension, int version) {
-	float sideMax = worldSize / 2.0f;
-
+	gravity = vec3(0.0f, -20.0f, 0.0);
 	if(version == 1){
-	  drawWaterShape(numParticles, worldSize / -8.0, worldSize / 4.0, worldSize / -8.0 , worldSize / 8.0, worldSize / 2.0, worldSize / 8.0);
+	  	particleMass = 0.2f;
+		numParticles = 1;
+
+		vec3 position1(0.0f, 0.0f, 0.0f);
+
+		Particle particle1(position1);
+		gridCells[mapToIndex(particle1)].push_back(particle1);
 	}
 	else if (version == 2) { // two particles
-		particleMass = 0.02f;
+		particleMass = 0.2f;
 		numParticles = 2;
 
-		vec3 position1(-0.0125f, 0.0f, 0.0f);
-		vec3 position2(0.0125f, 0.0f, 0.0f);
+		vec3 position1(-0.0130697f, 0.0f, 0.0f);
+		vec3 position2(0.0130697f, 0.0f, 0.0f);
 
 		Particle particle1(position1);
 		Particle particle2(position2);

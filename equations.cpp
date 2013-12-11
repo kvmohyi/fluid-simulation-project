@@ -107,6 +107,8 @@ float viscosityKernelLaplacian(Particle& current, Particle& other, float h) {
 float poly6Kernel(Particle& current, Particle& other, float h) {
 	float r = particleDistance(current, other);
 
+	cout << 315.0f / (64.0f * PI * pow(h, 9.0f)) * pow(pow(h, 2.0f) - pow(r, 2.0f), 3.0f) << endl;
+
 	return 315.0f / (64.0f * PI * pow(h, 9.0f)) * pow(pow(h, 2.0f) - pow(r, 2.0f), 3.0f);
 }
 

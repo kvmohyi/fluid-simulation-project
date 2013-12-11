@@ -9,5 +9,5 @@ gas_constant 3.0
 tension_constant 0.0728
 tension_threshold 7.065
 
-test_version 2
+test_version 1
 dimensions 3
