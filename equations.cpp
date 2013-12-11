@@ -5,6 +5,7 @@
 #include <cmath>
 #include <utility>
 #include <glm/glm.hpp>
+#include <glm/ext.hpp>
 
 #include "geometry.hpp"
 #define PI 3.14159265f
@@ -126,10 +127,8 @@ vec3 pressureForcePartial(Particle& current, Particle& other, float particleMass
 }
 
 vec3 viscosityForcePartial(Particle& current, Particle& other, float timeStepSize, float viscosityConstant, float particleMass, float h) {
-	vec3 currentAvgVelocity = (current.nextVelocity + current.prevVelocity) / 2.0f;
-	vec3 otherAvgVelocity = (other.nextVelocity + other.prevVelocity) / 2.0f;
 
-	return viscosityConstant * particleMass * (otherAvgVelocity - currentAvgVelocity) / other.density * viscosityKernelLaplacian(current, other, h);
+	return viscosityConstant * particleMass * (other.currentVelocity - current.currentVelocity) / current.density * viscosityKernelLaplacian(current, other, h);
 }
 
 vec3 inwardSurfaceNormalPartial(Particle& current, Particle& other, float particleMass, float h) {

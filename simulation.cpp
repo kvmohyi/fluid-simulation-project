@@ -95,8 +95,8 @@ FluidSimulation::FluidSimulation(string file) {
 	// Instantiate the "3D" grid of cells
 	gridCells.resize(numGrids * numGrids * numGrids);
 	// Set gravity here
-	gravity = vec3(0.0f, -9.8f, 0.0f);
-	//gravity = vec3(0.0f, 0.0f, 0.0f);
+	//gravity = vec3(0.0f, -9.8f, 0.0f);
+	gravity = vec3(0.0f, 0.0f, 0.0f);
 	// Initialize the iteration count
 	numIterations = 0;
 	numParticles = 0;
@@ -115,18 +115,6 @@ void FluidSimulation::elapseTimeGrid() {
 		for (size_t i = 0; i < gridCells[i_cell].size(); i++) {
 			Particle& current = gridCells[i_cell][i];
 			current.density = 0.0f;
-
-			/*//Old version that searches through all particles, rather than just nearby cells
-			for (size_t  j_cell = 0; j_cell < gridCells.size(); j_cell++) {
-				for (size_t j = 0; j < gridCells[j_cell].size(); j++) {
-					Particle& other = gridCells[j_cell][j];
-					current.density += particleMass * poly6Kernel(current, other, localRadius);
-
-					#if false
-						cout << poly6Kernel(current, other, localRadius) << endl;
-					#endif
-				}
-			}*/
 
 			int offsets[] = {-1, 0, 1};
 
@@ -172,31 +160,10 @@ void FluidSimulation::elapseTimeGrid() {
 			bool collide = false;
 			float time = timeStepSize;
 
-			#if false
+			#if true
 				current.print();
 				cout << endl;
 			#endif
-
-			/*if(cube.collision(current.position, newPosition)){
-			  collide = true;
-			  cout << "collision" << endl;
-			  pair<float, vec3> timeAndNormal = cube.collisionTimeNormal(current.position, newPosition);
-			  cout << "normal " << timeAndNormal.second.x << " " << timeAndNormal.second.y << " " << timeAndNormal.second.z << endl;
-			  cout << "dot " << dot(current.velocity, timeAndNormal.second) << endl;
-			    vec3 currVelocity = current.velocity;
-			    vec3 reflectVelocity = currVelocity - 2 * dot(currVelocity, timeAndNormal.second) * timeAndNormal.second;
-			    cout << "reflective Velocity: " << reflectVelocity.x << " " << reflectVelocity.y << " " << reflectVelocity.z << endl;
-			    current.velocity = reflectVelocity;
-			    newVelocity = reflectVelocity;
-			    float newTime = timeStepSize - timeAndNormal.first * timeStepSize;
-			    time = newTime;
-			    vec3 collideLoc = current.position + (newPosition - current.position) * timeAndNormal.first;
-			    newPosition = collideLoc + dampFactor * reflectVelocity * time;// + 0.5f * current.acceleration + pow(time, 2.0f);
-			    cout << "newPosition " << newPosition.x << " " << newPosition.y << " " << newPosition.z << endl;
-			    
-			}
-			else {*/
-			//}
 
 			int offsets[] = {-1, 0, 1};
 
@@ -238,28 +205,43 @@ void FluidSimulation::elapseTimeGrid() {
 
 			float inwardSurfaceNormalMagnitude = glm::length(inwardSurfaceNormal);
 
+			cout << "Force: " << glm::to_string(pressureForce) << endl;
+
 			if (inwardSurfaceNormalMagnitude >= tensionThreshold) {
 				surfaceTensionForce = -1.0f * tensionConstant * colorFieldLaplacian * inwardSurfaceNormal / inwardSurfaceNormalMagnitude;
 				//cout << "Inward Surface Tension Force: " << to_string(surfaceTensionForce) << endl;
 			}
 			// else leave it as the zero vector
 
-			acceleration = (current.density * gravity + pressureForce + viscosityForce + surfaceTensionForce) / current.density;
+			acceleration = (current.density * gravity + pressureForce /*+ viscosityForce + surfaceTensionForce*/) / current.density; // a at t=0
 			
-			vec3 oldVelocity; // v at t-0.5
+			/*vec3 oldVelocity;
 			if (numIterations > 0)
-				oldVelocity = current.nextVelocity;
+				oldVelocity = current.currentVelocity;
 			else
-				oldVelocity = current.nextVelocity - 0.5f * timeStepSize * acceleration;
+				oldVelocity = -0.5f * timeStepSize * acceleration;
 
-			current.nextVelocity = current.prevVelocity + timeStepSize * acceleration;
+			current.prevVelocity = oldVelocity + timeStepSize * acceleration;
 
-			current.position = current.position + timeStepSize * current.nextVelocity;
+			current.position = current.position + timeStepSize * current.prevVelocity;*/
 
-			int newIndex = mapToIndex(current);
+			vec3 nextPrevVelocity;
+			vec3 nextCurrentVelocity;
+			vec3 nextPosition;
+
+			if (numIterations == 0)
+				current.prevVelocity = -0.5f * timeStepSize * acceleration;
+
+			nextPrevVelocity = current.prevVelocity + timeStepSize * acceleration;
+			nextCurrentVelocity = 0.5f * (current.prevVelocity + nextPrevVelocity);
+			nextPosition = current.position + timeStepSize * nextPrevVelocity;
+
+			Particle newParticle(nextPosition, nextCurrentVelocity, nextPrevVelocity, current.density, current.pressure);
+
+			int newIndex = mapToIndex(newParticle);
 			if (newIndex < 0 || newIndex >= gridCells.size())
 				continue;
-			newGridCells[mapToIndex(current)].push_back(current);
+			newGridCells[mapToIndex(current)].push_back(newParticle);
 		}
 	}
 
@@ -333,24 +315,39 @@ void FluidSimulation::drawWaterShape(int numParticles, float xStart, float yStar
 
 	numIterations++;
 }
-void FluidSimulation::drawTest(int dimension, int version){
-		if(version == 1){
-		  drawWaterShape(numParticles, worldSize / -8.0, worldSize / 4.0, worldSize / -8.0 , worldSize / 8.0, worldSize / 2.0, worldSize / 8.0);
-		}
-		else if(version == 2) {
-			particleMass = 0.02f;
-			float stepSize = 0.02;
-			for (float x = worldSize / -16.0f; x < worldSize / 16.0f; x += stepSize) {
-				for (float y = worldSize / -16.0f; y < worldSize / 16.0f; y += stepSize) {
-					for (float z = worldSize / -16.0f; z < worldSize / 16.0f; z += stepSize) {
-						vec3 position(x, y, z);
-						Particle particle(position);
-						gridCells[mapToIndex(particle)].push_back(particle);
-						numParticles++;
-					}
+void FluidSimulation::drawTest(int dimension, int version) {
+	float sideMax = worldSize / 2.0f;
+
+	if(version == 1){
+	  drawWaterShape(numParticles, worldSize / -8.0, worldSize / 4.0, worldSize / -8.0 , worldSize / 8.0, worldSize / 2.0, worldSize / 8.0);
+	}
+	else if (version == 2) { // two particles
+		particleMass = 0.02f;
+		numParticles = 2;
+
+		vec3 position1(-0.0125f, 0.0f, 0.0f);
+		vec3 position2(0.0125f, 0.0f, 0.0f);
+
+		Particle particle1(position1);
+		Particle particle2(position2);
+
+		gridCells[mapToIndex(particle1)].push_back(particle1);
+		gridCells[mapToIndex(particle2)].push_back(particle2);
+	}
+	else if (version == 3) {
+		particleMass = 0.02f;
+		float stepSize = 0.025;
+		for (float x = sideMax / -16.0f; x < sideMax / 16.0f; x += stepSize) {
+			for (float y = sideMax / -16.0f; y < sideMax / 16.0f; y += stepSize) {
+				for (float z = sideMax / -16.0f; z < sideMax / 16.0f; z += stepSize) {
+					vec3 position(x, y, z);
+					Particle particle(position);
+					gridCells[mapToIndex(particle)].push_back(particle);
+					numParticles++;
 				}
 			}
 		}
+	}
 }
 
 void FluidSimulation::printParams() {
