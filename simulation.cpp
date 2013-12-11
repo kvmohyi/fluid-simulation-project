@@ -16,6 +16,7 @@ using namespace std;
 using namespace glm;
 
 float dampFactor = 0.5;
+#define PI 3.14159265f
 
 void FluidSimulation::instantiateFromFile(string file) {
 	std::ifstream inpfile(file.c_str());
@@ -89,7 +90,7 @@ FluidSimulation::FluidSimulation(string file) {
 	instantiateFromFile(file);
 
 	// Number of grids such that each grid cell is greater than the 2 * radius of support
-	numGrids = ceil(worldSize / (2.0 * localRadius));
+	numGrids = 2;
 	// gridSize > 2 * localRadius
 	gridSize = worldSize / numGrids;
 	// Instantiate the "3D" grid of cells
@@ -132,7 +133,6 @@ void FluidSimulation::elapseTimeGrid() {
 							if (r > localRadius)
 								continue;
 
-							cout << "DERP" << endl;
 							current.density += particleMass * poly6Kernel(current, other, localRadius);
 						}
 					}
@@ -204,7 +204,7 @@ void FluidSimulation::elapseTimeGrid() {
 
 			float inwardSurfaceNormalMagnitude = glm::length(inwardSurfaceNormal);
 
-			cout << "Force: " << glm::to_string(pressureForce) << endl;
+			cout << "\tForce: " << glm::to_string(pressureForce) << endl;
 
 			if (inwardSurfaceNormalMagnitude >= tensionThreshold) {
 				surfaceTensionForce = -1.0f * tensionConstant * colorFieldLaplacian * inwardSurfaceNormal / inwardSurfaceNormalMagnitude;
@@ -212,7 +212,7 @@ void FluidSimulation::elapseTimeGrid() {
 			}
 			// else leave it as the zero vector
 
-			acceleration = (current.density * gravity + pressureForce /*+ viscosityForce + surfaceTensionForce*/) / current.density; // a at t=0
+			acceleration = (current.density * gravity + pressureForce + viscosityForce + surfaceTensionForce) / current.density; // a at t=0
 			
 			/*vec3 oldVelocity;
 			if (numIterations > 0)
@@ -340,7 +340,9 @@ void FluidSimulation::drawWaterShape(int numParticles, float xStart, float yStar
 	numIterations++;
 }
 void FluidSimulation::drawTest(int dimension, int version) {
-	gravity = vec3(0.0f, -20.0f, 0.0);
+	gravity = vec3(0.0f, -9.8f, 0.0);
+	float sideMax = worldSize / 2.0f;
+
 	if(version == 1){
 	  	particleMass = 0.2f;
 		numParticles = 1;
@@ -364,11 +366,23 @@ void FluidSimulation::drawTest(int dimension, int version) {
 		gridCells[mapToIndex(particle2)].push_back(particle2);
 	}
 	else if (version == 3) {
-		particleMass = 0.02f;
-		float stepSize = 0.025;
-		for (float x = sideMax / -16.0f; x < sideMax / 16.0f; x += stepSize) {
-			for (float y = sideMax / -16.0f; y < sideMax / 16.0f; y += stepSize) {
-				for (float z = sideMax / -16.0f; z < sideMax / 16.0f; z += stepSize) {
+		float volume = 0.1f;
+		float sideSize = pow(volume, 1.0f / 3.0f);
+
+		restDensity = 1000;
+		numParticles = 1000;
+		particleMass = volume * restDensity / numParticles;
+
+		/*the smallest possible amount of particles that renders the fluid simulation stable,
+		while still respecting the properties of the fluid material.*/
+		float x = 20;
+		localRadius = pow((3.0f * volume * x) / (4 * PI * numParticles), 1.0f / 3.0f);
+		float stepSize = pow(volume / numParticles, 1.0f / 3.0f);
+		numParticles = 0;
+
+		for (float x = sideSize / -2.0f; x < sideSize / 2.0f; x += stepSize) {
+			for (float y = sideSize / -2.0f; y < sideSize / 2.0f; y += stepSize) {
+				for (float z = sideSize / -2.0f; z < sideSize / 2.0f; z += stepSize) {
 					vec3 position(x, y, z);
 					Particle particle(position);
 					gridCells[mapToIndex(particle)].push_back(particle);
