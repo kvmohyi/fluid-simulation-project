@@ -100,7 +100,7 @@ FluidSimulation::FluidSimulation() {
 	gasConstant = 3.0;
 	tensionConstant = 0.0728;
 	tensionThreshold = 7.065;
-	testVersion = 4;
+	testVersion = 5;
 	dimensions = 3;
 	//instantiateFromFile(file);
 	drawTest(dimensions, testVersion);
@@ -405,9 +405,9 @@ void FluidSimulation::drawTest(int dimension, int version) {
 		float sideSize = 0.5f;
 
 		particleMass = 0.02;
-
+		localRadius = 0.05;
+		reinitGridCellls();
 		float stepSize = 0.01;
-		numParticles = 0;
 
 		for (float x = sideSize / -2.0f; x < sideSize / 2.0f; x += stepSize) {
 			for (float y = sideSize / -2.0f; y < sideSize / 2.0f; y += stepSize) {
@@ -417,6 +417,25 @@ void FluidSimulation::drawTest(int dimension, int version) {
 				numParticles++;
 				for (float z = sideSize / -2.0f; z < sideSize / 2.0f; z += stepSize) {
 					
+				}
+			}
+		}
+	}
+	else if (version == 5) {
+		float sideSize = 1.0;
+		float volume = sideSize * sideSize * sideSize;
+		float maxParticles = 100000;
+		float stepSize = sideSize / pow(maxParticles, 1.0 / 3.0);
+		particleMass = volume * restDensity / maxParticles;
+		localRadius = idealLocalRadius(volume, maxParticles, 20);
+		reinitGridCellls();
+		for (float x = -worldSize / 2.0; x < 0.0; x += stepSize) {
+			for (float y = -worldSize / 2.0; y < 0.0; y += stepSize) {
+				for (float z = -worldSize / 2.0; z < 0.0 && numParticles < maxParticles; z += stepSize) {
+					vec3 position(x, y, z);
+					Particle particle(position);
+					gridCells[mapToIndex(particle)].push_back(particle);
+					numParticles++;
 				}
 			}
 		}
@@ -444,4 +463,14 @@ void FluidSimulation::printParams() {
 
 double FluidSimulation::sphereRadius(Particle& particle) {
 	return pow(3.0 * particleMass / (4.0 * PI * particle.density), 1.0 / 3.0);
+}
+
+float FluidSimulation::idealLocalRadius(float volume, int numParticles, int x) {
+	return pow(3.0 * volume * x / (4.0 * PI * numParticles), 1.0 / 3.0);
+}
+
+void FluidSimulation::reinitGridCellls() {
+	numGrids = ceil(worldSize / (2.0f * localRadius));
+	gridSize = worldSize / numGrids;
+	gridCells.resize(numGrids * numGrids * numGrids);
 }
