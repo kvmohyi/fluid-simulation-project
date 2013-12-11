@@ -15,7 +15,7 @@
 using namespace std;
 using namespace glm;
 
-float dampFactor = 0.5;
+float dampFactor = 0.9;
 #define PI 3.14159265f
 
 void FluidSimulation::instantiateFromFile(string file) {
@@ -90,7 +90,7 @@ FluidSimulation::FluidSimulation(string file) {
 	instantiateFromFile(file);
 
 	// Number of grids such that each grid cell is greater than the 2 * radius of support
-	numGrids = 2;
+	numGrids = ceil(worldSize / (2 * localRadius));
 	// gridSize > 2 * localRadius
 	gridSize = worldSize / numGrids;
 	// Instantiate the "3D" grid of cells
@@ -214,7 +214,7 @@ void FluidSimulation::elapseTimeGrid() {
 			}
 			// else leave it as the zero vector
 
-			acceleration = (current.density * gravity + pressureForce + viscosityForce + surfaceTensionForce) / current.density; // a at t=0
+			acceleration = (current.density * gravity + pressureForce /*+ viscosityForce + surfaceTensionForce*/) / current.density; // a at t=0
 			
 			/*vec3 oldVelocity;
 			if (numIterations > 0)
@@ -387,6 +387,27 @@ void FluidSimulation::drawTest(int dimension, int version) {
 		for (float x = sideSize / -2.0f + stepSize / 2.0f; x < sideSize / 2.0f; x += stepSize) {
 			for (float y = sideSize / -2.0f + stepSize / 2.0f; y < sideSize / 2.0f; y += stepSize) {
 				for (float z = sideSize / -2.0f + stepSize / 2.0f; z < sideSize / 2.0f; z += stepSize) {
+					vec3 position(x, y, z);
+					Particle particle(position);
+					gridCells[mapToIndex(particle)].push_back(particle);
+					numParticles++;
+				}
+			}
+		}
+	}
+	else if (version == 4) { // cube drop
+		//gravity = vec3(0.0f, 0.0f, 0.0f);
+		float sideSize = 0.5f;
+
+		particleMass = 0.02;
+
+		localRadius = 0.0625;
+		float stepSize = 0.015;
+		numParticles = 0;
+
+		for (float x = sideSize / -2.0f; x < sideSize / 2.0f; x += stepSize) {
+			for (float y = sideSize / -2.0f; y < sideSize / 2.0f; y += stepSize) {
+				for (float z = sideSize / -2.0f; z < sideSize / 2.0f; z += stepSize) {
 					vec3 position(x, y, z);
 					Particle particle(position);
 					gridCells[mapToIndex(particle)].push_back(particle);
