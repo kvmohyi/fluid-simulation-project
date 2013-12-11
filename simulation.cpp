@@ -465,8 +465,8 @@ double FluidSimulation::sphereRadius(Particle& particle) {
 	return pow(3.0 * particleMass / (4.0 * PI * particle.density), 1.0 / 3.0);
 }
 
-float FluidSimulation::idealLocalRadius(float volume, int numParticles, int x) {
-	return pow(3.0 * volume * x / (4.0 * PI * numParticles), 1.0 / 3.0);
+float FluidSimulation::idealLocalRadius(float volume, int n, int x) {
+	return pow(3.0 * volume * x / (4.0 * PI * n), 1.0 / 3.0);
 }
 
 void FluidSimulation::reinitGridCellls() {
