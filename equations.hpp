@@ -13,6 +13,9 @@ vec3 gradient_gaussian_smoothing(Particle particle, Particle& other);
 float gradient2_gaussian_smoothing(Particle particle, Particle& other);
 vec3 force_pressure(Particle particle, Particle& other, float particleMass);
 vec3 force_viscosity(Particle particle, Particle& other, float particleMasss);*/
+
+
+float sqr(float x);
 float particleDistance(Particle& current, Particle& other);
 vec3 pressureForcePartial(Particle& current, Particle& other, float particleMass, float h);
 vec3 viscosityForcePartial(Particle& current, Particle& other, float timeStepSize, float viscosityConstant, float particleMass, float h);
