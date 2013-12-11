@@ -89,6 +89,7 @@ void FluidSimulation::instantiateFromFile(string file) {
 }
 
 FluidSimulation::FluidSimulation(string file) {
+	gravity = vec3(0.0f, -9.8f, 0.0);
 	worldSize = 2.0f;
 	timeStepSize = 0.01;
 	numIterations = 0;
@@ -357,10 +358,9 @@ void FluidSimulation::drawWaterShape(int n, float xStart, float yStart, float zS
 	numIterations++;
 }
 void FluidSimulation::drawTest(int dimension, int version) {
-	gravity = vec3(0.0f, -9.8f, 0.0);
 	float sideMax = worldSize / 2.0f;
 
-	if(version == 1){
+	if (version == 0) { // One particle
 	  	particleMass = 0.2f;
 		numParticles = 1;
 
@@ -368,19 +368,6 @@ void FluidSimulation::drawTest(int dimension, int version) {
 
 		Particle particle1(position1);
 		gridCells[mapToIndex(particle1)].push_back(particle1);
-	}
-	else if (version == 2) { // two particles
-		particleMass = 0.2f;
-		numParticles = 2;
-
-		vec3 position1(-0.0130697f, 0.0f, 0.0f);
-		vec3 position2(0.0130697f, 0.0f, 0.0f);
-
-		Particle particle1(position1);
-		Particle particle2(position2);
-
-		gridCells[mapToIndex(particle1)].push_back(particle1);
-		gridCells[mapToIndex(particle2)].push_back(particle2);
 	}
 	else if (version == 3) {
 		float volume = 0.1f;
