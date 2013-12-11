@@ -98,8 +98,8 @@ void initScene(){
 // function that does the actual drawing
 //***************************************************
 void myDisplay2D() {
-  if (continueSimulation) {
-  //if (true) {
+    //if (continueSimulation) {
+    if (true) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glMatrixMode(GL_MODELVIEW);
@@ -138,6 +138,40 @@ void myDisplay2D() {
   }
 }
 
+void drawCube(RigidBody& rigidBody) {
+  glBegin(GL_QUADS);
+      // front
+      glVertex3f(0.0f, 0.0f, 0.0f);
+      glVertex3f(1.0f, 0.0f, 0.0f);
+      glVertex3f(1.0f, 1.0f, 0.0f);
+      glVertex3f(0.0f, 1.0f, 0.0f);
+      // back
+      glVertex3f(0.0f, 0.0f, -1.0f);
+      glVertex3f(1.0f, 0.0f, -1.0f);
+      glVertex3f(1.0f, 1.0f, -1.0f);
+      glVertex3f(0.0f, 1.0f, -1.0f);
+      // right
+      glVertex3f(1.0f, 0.0f, 0.0f);
+      glVertex3f(1.0f, 0.0f, -1.0f);
+      glVertex3f(1.0f, 1.0f, -1.0f);
+      glVertex3f(1.0f, 1.0f, 0.0f);
+      // left
+      glVertex3f(0.0f, 0.0f, 0.0f);
+      glVertex3f(0.0f, 0.0f, -1.0f);
+      glVertex3f(0.0f, 1.0f, -1.0f);
+      glVertex3f(0.0f, 1.0f, 0.0f);
+      // top
+      glVertex3f(0.0f, 1.0f, 0.0f);
+      glVertex3f(1.0f, 1.0f, 0.0f);
+      glVertex3f(1.0f, 1.0f, -1.0f);
+      glVertex3f(0.0f, 1.0f, -1.0f);
+      // bottom
+      glVertex3f(0.0f, 0.0f, 0.0f);
+      glVertex3f(1.0f, 0.0f, 0.0f);
+      glVertex3f(1.0f, 0.0f, -1.0f);
+      glVertex3f(0.0f, 0.0f, -1.0f);
+  glEnd();
+}
 
 //****************************************************
 // called by glut when there are no messages to handle

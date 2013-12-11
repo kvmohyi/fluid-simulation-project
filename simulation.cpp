@@ -117,6 +117,7 @@ void FluidSimulation::elapseTimeGrid() {
 
 			int offsets[] = {-1, 0, 1};
 
+			#pragma omp parallel for
 			for (int z_offset = 0; z_offset < 3; z_offset++) {
 				for (int y_offset = 0; y_offset < 3; y_offset++) {
 					for (int x_offset = 0; x_offset < 3; x_offset++) {
@@ -159,13 +160,14 @@ void FluidSimulation::elapseTimeGrid() {
 			bool collide = false;
 			float time = timeStepSize;
 
-			#if true
+			#if false
 				current.print();
 				cout << endl;
 			#endif
 
 			int offsets[] = {-1, 0, 1};
 
+			#pragma omp parallel for
 			for (int z_offset = 0; z_offset < 3; z_offset++) {
 				for (int y_offset = 0; y_offset < 3; y_offset++) {
 					for (int x_offset = 0; x_offset < 3; x_offset++) {
@@ -204,7 +206,7 @@ void FluidSimulation::elapseTimeGrid() {
 
 			float inwardSurfaceNormalMagnitude = glm::length(inwardSurfaceNormal);
 
-			cout << "\tForce: " << glm::to_string(pressureForce) << endl;
+			//cout << "\tForce: " << glm::to_string(pressureForce) << endl;
 
 			if (inwardSurfaceNormalMagnitude >= tensionThreshold) {
 				surfaceTensionForce = -1.0f * tensionConstant * colorFieldLaplacian * inwardSurfaceNormal / inwardSurfaceNormalMagnitude;
@@ -372,7 +374,7 @@ void FluidSimulation::drawTest(int dimension, int version) {
 		float sideSize = pow(volume, 1.0f / 3.0f);
 
 		restDensity = 1000;
-		numParticles = 1000;
+		numParticles = 5000;
 		particleMass = volume * restDensity / numParticles;
 
 		/*the smallest possible amount of particles that renders the fluid simulation stable,
@@ -382,9 +384,9 @@ void FluidSimulation::drawTest(int dimension, int version) {
 		float stepSize = pow(volume / numParticles, 1.0f / 3.0f);
 		numParticles = 0;
 
-		for (float x = sideSize / -2.0f; x < sideSize / 2.0f; x += stepSize) {
-			for (float y = sideSize / -2.0f; y < sideSize / 2.0f; y += stepSize) {
-				for (float z = sideSize / -2.0f; z < sideSize / 2.0f; z += stepSize) {
+		for (float x = sideSize / -2.0f + stepSize / 2.0f; x < sideSize / 2.0f; x += stepSize) {
+			for (float y = sideSize / -2.0f + stepSize / 2.0f; y < sideSize / 2.0f; y += stepSize) {
+				for (float z = sideSize / -2.0f + stepSize / 2.0f; z < sideSize / 2.0f; z += stepSize) {
 					vec3 position(x, y, z);
 					Particle particle(position);
 					gridCells[mapToIndex(particle)].push_back(particle);
