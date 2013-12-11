@@ -44,7 +44,7 @@ public:
 	int mapToIndex(Particle particle);
 	int mapToIndex(Particle particle, int x_offset, int y_offset, int z_offset);
 	int mapToIndex(int x, int y, int z);
-    void drawWaterShape(int numParticles, float xStart, float yStart, float zStart, float xEnd, float yEnd, float zEnd);
+    void drawWaterShape(int numParticles, float xStart, float yStart, float zStart, float xEnd, float yEnd, float zEnd, vec3 _velocity);
     void drawTest(int dimension, int version);
     void printParams();
     double sphereRadius(Particle& particle);
