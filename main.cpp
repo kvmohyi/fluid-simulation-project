@@ -66,8 +66,8 @@ void myReshape(int w, int h) {
   // glOrtho(-1, 1 + (w-400)/200.0 , -1 -(h-400)/200.0, 1, 1, -1); // resize type = add
   // glOrtho(-w/400.0, w/400.0, -h/400.0, h/400.0, 1, -1); // resize type = center
 
-  //glOrtho(-1, 1, -1, 1, 1, -1);    // resize type = stretch
-  gluPerspective(90.0, (float)viewport.w/(float)viewport.h, 0.001, 1000.0);
+  glOrtho(-1, 1, -1, 1, 1, -1);    // resize type = stretch
+  //gluPerspective(90.0, (float)viewport.w/(float)viewport.h, 0.001, 1000.0);
   //gluLookAt(0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
   //------------------------------------------------------------
 }
@@ -105,9 +105,9 @@ void myDisplay2D() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glPushMatrix();
-      glTranslatef(0.0f, 0.0f, -0.5f);
+      //glTranslatef(0.0f, 0.0f, -0.5f);
 
-      glScalef(0.5f / fluidsim->worldSize, 0.5f / fluidsim->worldSize, 0.5f / fluidsim->worldSize);
+      //glScalef(0.5f / fluidsim->worldSize, 0.5f / fluidsim->worldSize, 0.5f / fluidsim->worldSize);
 
       vector<vector<Particle> >& gridCells = fluidsim->particleList();
 
@@ -122,7 +122,7 @@ void myDisplay2D() {
           #endif
           glPushMatrix();
             glTranslatef(gridCells[cell][i].position.x, gridCells[cell][i].position.y, gridCells[cell][i].position.z);
-            glutSolidSphere(0.01, 20, 20);
+            glutSolidSphere(fluidsim->sphereRadius(gridCells[cell][i]), 20, 20);
           glPopMatrix();
         }
       }
@@ -192,8 +192,8 @@ void keyPressed (unsigned char key, int x, int y) {
 // the usual stuff, nothing exciting here
 //****************************************************
 int main(int argc, char *argv[]) {
-  string file = argv[1];
-  fluidsim = new FluidSimulation(file);
+  //string file = argv[1];
+  fluidsim = new FluidSimulation();
 
   //This initializes glut
   glutInit(&argc, argv);

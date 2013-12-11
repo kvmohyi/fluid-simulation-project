@@ -37,7 +37,7 @@ public:
 
 	void instantiateFromFile(string file);
 
-	FluidSimulation(string file);
+	FluidSimulation();
 	void elapseTimeGrid();
 	vector<vector<Particle> >& particleList();
 	int mapToIndex(Particle particle);
@@ -46,6 +46,7 @@ public:
     void drawWaterShape(int numParticles, float xStart, float yStart, float zStart, float xEnd, float yEnd, float zEnd);
     void drawTest(int dimension, int version);
     void printParams();
+    double sphereRadius(Particle& particle);
 };
 
 

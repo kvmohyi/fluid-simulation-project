@@ -86,7 +86,7 @@ void FluidSimulation::instantiateFromFile(string file) {
 	}
 }
 
-FluidSimulation::FluidSimulation(string file) {
+FluidSimulation::FluidSimulation() {
 	worldSize = 2.0f;
 	timeStepSize = 0.01;
 	numIterations = 0;
@@ -396,21 +396,19 @@ void FluidSimulation::drawTest(int dimension, int version) {
 		}
 	}
 	else if (version == 4) { // cube drop
-		//gravity = vec3(0.0f, 0.0f, 0.0f);
 		float sideSize = 0.5f;
 
 		particleMass = 0.02;
 
-		localRadius = 0.0625;
-		float stepSize = 0.015;
+		float stepSize = 0.01;
 		numParticles = 0;
 
 		for (float x = sideSize / -2.0f; x < sideSize / 2.0f; x += stepSize) {
 			for (float y = sideSize / -2.0f; y < sideSize / 2.0f; y += stepSize) {
 				vec3 position(x, y, 0.0f);
-					Particle particle(position);
-					gridCells[mapToIndex(particle)].push_back(particle);
-					numParticles++;
+				Particle particle(position);
+				gridCells[mapToIndex(particle)].push_back(particle);
+				numParticles++;
 				for (float z = sideSize / -2.0f; z < sideSize / 2.0f; z += stepSize) {
 					
 				}
@@ -436,4 +434,8 @@ void FluidSimulation::printParams() {
 	cout << "dimensions: " << dimensions << endl;
 	cout << "tensionThreshold: " << tensionThreshold << endl;
 	cout << "tensionConstant: " << tensionConstant << endl;
+}
+
+double FluidSimulation::sphereRadius(Particle& particle) {
+	return pow(3.0 * particleMass / (4.0 * PI * particle.density), 1.0 / 3.0);
 }
