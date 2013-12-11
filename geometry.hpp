@@ -17,10 +17,10 @@ public:
 	float density;
 	float pressure;
 	vec3 position;
-	vec3 currentVelocity; // the current velocity
-	vec3 prevVelocity; // the past half time step
+	vec3 velocity; // the current velocity
     Particle(vec3 _position);
-    Particle(vec3 _position, vec3 _currentVelocity, vec3 _prevVelocity, float _density, float _pressure);
+    Particle(vec3 _position, vec3 _velocity);
+    Particle(vec3 _position, vec3 _velocity, float _density, float _pressure);
     void print();
 };
 
@@ -28,7 +28,7 @@ class Triangle {
 public:
 	vec3 a, b, c;
 	vec3 normal;
-        Triangle(vec3 a, vec3 b, vec3 c, vec3 normal);
+    Triangle(vec3 a, vec3 b, vec3 c, vec3 normal);
 };
 
 class RigidBody {

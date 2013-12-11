@@ -192,8 +192,8 @@ void keyPressed (unsigned char key, int x, int y) {
 // the usual stuff, nothing exciting here
 //****************************************************
 int main(int argc, char *argv[]) {
-  //string file = argv[1];
-  fluidsim = new FluidSimulation();
+  string file = argv[1];
+  fluidsim = new FluidSimulation(file);
 
   //This initializes glut
   glutInit(&argc, argv);

@@ -50,29 +50,29 @@ void RigidBody::handleCollisions(Particle& particle) {
   float dampening = 0.5f;
   if (particle.position.x < -length / 2.0) {
     particle.position.x = -length / 2.0 + (-length / 2.0 - particle.position.x);
-    particle.currentVelocity.x = -1.0 * dampening * particle.currentVelocity.x;
+    particle.velocity.x = -1.0 * dampening * particle.velocity.x;
   }
   else if (particle.position.x > length / 2.0) {
     particle.position.x = length / 2.0 - (-length / 2.0 + particle.position.x);
-    particle.currentVelocity.x = -1.0 * dampening * particle.currentVelocity.x;
+    particle.velocity.x = -1.0 * dampening * particle.velocity.x;
   }
 
   if (particle.position.y < -length / 2.0) {
     particle.position.y = -length / 2.0 + (-length / 2.0 - particle.position.y);
-    particle.currentVelocity.y = -1.0 * dampening * particle.currentVelocity.y;
+    particle.velocity.y = -1.0 * dampening * particle.velocity.y;
   }
   else if (particle.position.y > length / 2.0) {
     particle.position.y = length / 2.0 - (-length / 2.0 + particle.position.y);
-    particle.currentVelocity.y = -1.0 * dampening * particle.currentVelocity.y;
+    particle.velocity.y = -1.0 * dampening * particle.velocity.y;
   }
 
   if (particle.position.z < -length / 2.0) {
     particle.position.z = -length / 2.0 + (-length / 2.0 - particle.position.z);
-    particle.currentVelocity.z = -1.0 * dampening * particle.currentVelocity.z;
+    particle.velocity.z = -1.0 * dampening * particle.velocity.z;
   }
   else if (particle.position.z > length / 2.0) {
     particle.position.z = length / 2.0 - (-length / 2.0 + particle.position.z);
-    particle.currentVelocity.z = -1.0 * dampening * particle.currentVelocity.z;
+    particle.velocity.z = -1.0 * dampening * particle.velocity.z;
   }
 }
 
@@ -127,10 +127,14 @@ Particle::Particle(vec3 p){
   position = p;
 }
 
-Particle::Particle(vec3 _position, vec3 _currentVelocity, vec3 _prevVelocity, float _density, float _pressure) {
+Particle::Particle(vec3 _position, vec3 _velocity) {
   position = _position;
-  currentVelocity = _currentVelocity;
-  prevVelocity = _prevVelocity;
+  velocity = _velocity;
+}
+
+Particle::Particle(vec3 _position, vec3 _velocity, float _density, float _pressure) {
+  position = _position;
+  velocity = _velocity;
   density = _density;
   pressure = _pressure;
 }
@@ -138,8 +142,7 @@ Particle::Particle(vec3 _position, vec3 _currentVelocity, vec3 _prevVelocity, fl
 void Particle::print() {
   cout << "Particle" << endl;
   cout << "\tPosition: " << position.x << ", " << position.y << ", " << position.z << endl;
-  cout << "\tprevVelocity: " << prevVelocity.x << ", " << prevVelocity.y << ", " << prevVelocity.z << endl;
-  cout << "\tcurrentVelocity: " << currentVelocity.x << ", " << currentVelocity.y << ", " << currentVelocity.z << endl;
+  cout << "\tvelocity: " << velocity.x << ", " << velocity.y << ", " << velocity.z << endl;
   cout << "\tPressure: " << pressure << endl;
   cout << "\tDensity: " << density << endl;
 }

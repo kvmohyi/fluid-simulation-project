@@ -10,7 +10,6 @@
 
 #include "simulation.hpp"
 #include "equations.hpp"
-#include "geometry.hpp"
 
 using namespace std;
 using namespace glm;
@@ -81,28 +80,32 @@ void FluidSimulation::instantiateFromFile(string file) {
 			else if(!splitline[0].compare("tension_constant")) {
 				tensionConstant = atof(splitline[1].c_str());
 			}
+			else if(!splitline[0].compare("kernel_x")) {
+				kernelX = atof(splitline[1].c_str());
+			}
 		}
 		inpfile.close();
 	}
 }
 
-FluidSimulation::FluidSimulation() {
+FluidSimulation::FluidSimulation(string file) {
 	worldSize = 2.0f;
 	timeStepSize = 0.01;
 	numIterations = 0;
-	numParticles = 0;
-	localRadius = 0.0625;
-	numGrids = ceil(worldSize / (2.0f * localRadius));
-	gridSize = worldSize / numGrids;
-	gridCells.resize(numGrids * numGrids * numGrids);
-	restDensity = 1000;
+	//numParticles = 0;
+	//localRadius = 0.0625;
+	restDensity = 998.29;
 	viscosityConstant = 3.5;
 	gasConstant = 3.0;
 	tensionConstant = 0.0728;
 	tensionThreshold = 7.065;
 	testVersion = 5;
 	dimensions = 3;
-	//instantiateFromFile(file);
+	//Set num grids from the test cases
+	//numGrids = ceil(worldSize / (2.0f * localRadius));
+	//gridSize = worldSize / numGrids;
+	//gridCells.resize(numGrids * numGrids * numGrids);
+	instantiateFromFile(file);
 	drawTest(dimensions, testVersion);
 	cube = RigidBody(worldSize * .75, worldSize * .75, worldSize * .75);
 	printParams();
@@ -218,7 +221,7 @@ void FluidSimulation::elapseTimeGrid() {
 			
 			/*vec3 oldVelocity;
 			if (numIterations > 0)
-				oldVelocity = current.currentVelocity;
+				oldVelocity = current.velocity;
 			else
 				oldVelocity = -0.5f * timeStepSize * acceleration;
 
@@ -238,10 +241,10 @@ void FluidSimulation::elapseTimeGrid() {
 			nextPosition = current.position + timeStepSize * nextPrevVelocity;*/
 
 			vec3 nextPrevVelocity(0.0f, 0.0f, 0.0f);
-			vec3 nextCurrentVelocity = current.currentVelocity + timeStepSize * acceleration;
-			vec3 nextPosition = current.position + timeStepSize * (current.currentVelocity + timeStepSize * acceleration);
+			vec3 nextCurrentVelocity = current.velocity + timeStepSize * acceleration;
+			vec3 nextPosition = current.position + timeStepSize * (current.velocity + timeStepSize * acceleration);
 
-			Particle newParticle(nextPosition, nextCurrentVelocity, nextPrevVelocity, current.density, current.pressure);
+			Particle newParticle(nextPosition, nextCurrentVelocity, current.density, current.pressure);
 
 			/*if (cube.collision(current.position, newParticle.position)) {
 			  //cout << "collision"  << endl;
@@ -262,15 +265,15 @@ void FluidSimulation::elapseTimeGrid() {
 			  + sqr(newParticle.position.z - current.position.z));
 
 			  //cout << "rayDistance" << rayDistance << endl;
-			  vec3 newVelocity = current.currentVelocity - (1 + dampFactor * depth / (rayDistance)) * dot(current.currentVelocity, timeNormal.second) * timeNormal.second;
+			  vec3 newVelocity = current.velocity - (1 + dampFactor * depth / (rayDistance)) * dot(current.velocity, timeNormal.second) * timeNormal.second;
 			  //cout << "Collision Velocity " << newVelocity.x << " " << newVelocity.y << " " << newVelocity.z << endl;;
-			  newParticle.currentVelocity = newVelocity;
-			  newParticle.position = collisionPoint + (timeStepSize - timeStep) * newParticle.currentVelocity;
-			  //newParticle.prevVelocity = newParticle.currentVelocity - 0.5f * timeStep * acceleration;
+			  newParticle.velocity = newVelocity;
+			  newParticle.position = collisionPoint + (timeStepSize - timeStep) * newParticle.velocity;
+			  //newParticle.prevVelocity = newParticle.velocity - 0.5f * timeStep * acceleration;
 			  //cout << "newPosition " << newParticle.position.x << " " << newParticle.position.y << " " << newParticle.position.z << endl;
 			}*/
 
-			  cube.handleCollisions(newParticle);
+			 cube.handleCollisions(newParticle);
 
 			int newIndex = mapToIndex(newParticle);
 			if (newIndex < 0 || newIndex >= gridCells.size())

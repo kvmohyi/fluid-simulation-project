@@ -130,7 +130,7 @@ vec3 pressureForcePartial(Particle& current, Particle& other, float particleMass
 
 vec3 viscosityForcePartial(Particle& current, Particle& other, float timeStepSize, float viscosityConstant, float particleMass, float h) {
 
-	return viscosityConstant * particleMass * (other.currentVelocity - current.currentVelocity) / other.density * viscosityKernelLaplacian(current, other, h);
+	return viscosityConstant * particleMass * (other.velocity - current.velocity) / other.density * viscosityKernelLaplacian(current, other, h);
 }
 
 vec3 inwardSurfaceNormalPartial(Particle& current, Particle& other, float particleMass, float h) {

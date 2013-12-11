@@ -32,12 +32,13 @@ public:
 	int dimensions; // set to 2 for 2D, 3 for 3D
 	float tensionConstant;
 	float tensionThreshold;
+	int kernelX;
 
 	int numIterations;
 
 	void instantiateFromFile(string file);
 
-	FluidSimulation();
+	FluidSimulation(string file);
 	void elapseTimeGrid();
 	vector<vector<Particle> >& particleList();
 	int mapToIndex(Particle particle);

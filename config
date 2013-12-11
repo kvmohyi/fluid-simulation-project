@@ -1,13 +1,5 @@
 step_size 0.01
-world_size 2.0
-radius 0.0625
-
-rest_density 998.29
-
-viscosity_constant 3.5
-gas_constant 3.0
-tension_constant 0.0728
-tension_threshold 7.065
-
 test_version 4
+num_particles 1000
 dimensions 3
+kernel_x 20
