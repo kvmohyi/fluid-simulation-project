@@ -6,6 +6,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
+#include <omp.h>
 
 #include "simulation.hpp"
 #include "equations.hpp"
@@ -129,9 +130,9 @@ void FluidSimulation::elapseTimeGrid() {
 
 			int offsets[] = {-1, 0, 1};
 
-			for (int x_offset = 0; x_offset < 3; x_offset++) {
+			for (int z_offset = 0; z_offset < 3; z_offset++) {
 				for (int y_offset = 0; y_offset < 3; y_offset++) {
-					for (int z_offset = 0; z_offset < 3; z_offset++) {
+					for (int x_offset = 0; x_offset < 3; x_offset++) {
 						int index = mapToIndex(current, offsets[x_offset], offsets[y_offset], offsets[z_offset]);
 						// If the cell is out of bounds, then ignore it
 						if (index < 0 || index >= gridCells.size())
@@ -167,11 +168,11 @@ void FluidSimulation::elapseTimeGrid() {
 			vec3 surfaceTensionForce(0.0f, 0.0f, 0.0f);
 			vec3 inwardSurfaceNormal(0.0f, 0.0f, 0.0f);
 			float colorFieldLaplacian = 0.0f;
-			vec3 acceleration;
+			vec3 acceleration(0.0f, 0.0f, 0.0f);
 			bool collide = false;
 			float time = timeStepSize;
 
-			#if true
+			#if false
 				current.print();
 				cout << endl;
 			#endif
@@ -199,9 +200,9 @@ void FluidSimulation::elapseTimeGrid() {
 
 			int offsets[] = {-1, 0, 1};
 
-			for (int x_offset = 0; x_offset < 3; x_offset++) {
+			for (int z_offset = 0; z_offset < 3; z_offset++) {
 				for (int y_offset = 0; y_offset < 3; y_offset++) {
-					for (int z_offset = 0; z_offset < 3; z_offset++) {
+					for (int x_offset = 0; x_offset < 3; x_offset++) {
 						int index = mapToIndex(current, offsets[x_offset], offsets[y_offset], offsets[z_offset]);
 						// If the cell is out of bounds, then ignore it
 						if (index < 0 || index >= gridCells.size())
@@ -338,7 +339,7 @@ void FluidSimulation::drawTest(int dimension, int version){
 		}
 		else if(version == 2) {
 			particleMass = 0.02f;
-			float stepSize = 0.01;
+			float stepSize = 0.02;
 			for (float x = worldSize / -16.0f; x < worldSize / 16.0f; x += stepSize) {
 				for (float y = worldSize / -16.0f; y < worldSize / 16.0f; y += stepSize) {
 					for (float z = worldSize / -16.0f; z < worldSize / 16.0f; z += stepSize) {
