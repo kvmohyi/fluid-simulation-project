@@ -46,6 +46,36 @@ RigidBody::RigidBody(float l, float h, float d){
   triangles.push_back(Triangle(vertex6, vertex8, vertex7, vec3(0.0, 1.0, 0.0)));
 }
 
+void RigidBody::handleCollisions(Particle& particle) {
+  float dampening = 0;
+  if (particle.position.x < -length / 2.0) {
+    particle.position.x = -length / 2.0 + (-length / 2.0 - particle.position.x);
+    particle.currentVelocity.x = -1.0 * dampening * particle.currentVelocity.x;
+  }
+  else if (particle.position.x > length / 2.0) {
+    particle.position.x = length / 2.0 - (-length / 2.0 + particle.position.x);
+    particle.currentVelocity.x = -1.0 * dampening * particle.currentVelocity.x;
+  }
+
+  if (particle.position.y < -length / 2.0) {
+    particle.position.y = -length / 2.0 + (-length / 2.0 - particle.position.y);
+    particle.currentVelocity.y = -1.0 * dampening * particle.currentVelocity.y;
+  }
+  else if (particle.position.y > length / 2.0) {
+    particle.position.y = length / 2.0 - (-length / 2.0 + particle.position.y);
+    particle.currentVelocity.y = -1.0 * dampening * particle.currentVelocity.y;
+  }
+
+  if (particle.position.z < -length / 2.0) {
+    particle.position.z = -length / 2.0 + (-length / 2.0 - particle.position.z);
+    particle.currentVelocity.z = -1.0 * dampening * particle.currentVelocity.z;
+  }
+  else if (particle.position.z > length / 2.0) {
+    particle.position.z = length / 2.0 - (-length / 2.0 + particle.position.z);
+    particle.currentVelocity.z = -1.0 * dampening * particle.currentVelocity.z;
+  }
+}
+
 bool RigidBody::collision(vec3 start, vec3 end) {
   if(end.x > length / 2.0 || end.x < -1 * length / 2.0){
     return true;

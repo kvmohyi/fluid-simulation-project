@@ -15,7 +15,7 @@
 using namespace std;
 using namespace glm;
 
-float dampFactor = 0.9;
+float dampFactor = 0.5f;
 #define PI 3.14159265f
 
 void FluidSimulation::instantiateFromFile(string file) {
@@ -226,7 +226,7 @@ void FluidSimulation::elapseTimeGrid() {
 
 			current.position = current.position + timeStepSize * current.prevVelocity;*/
 
-			vec3 nextPrevVelocity;
+			/*vec3 nextPrevVelocity;
 			vec3 nextCurrentVelocity;
 			vec3 nextPosition;
 
@@ -235,11 +235,15 @@ void FluidSimulation::elapseTimeGrid() {
 
 			nextPrevVelocity = current.prevVelocity + timeStepSize * acceleration;
 			nextCurrentVelocity = 0.5f * (current.prevVelocity + nextPrevVelocity);
-			nextPosition = current.position + timeStepSize * nextPrevVelocity;
+			nextPosition = current.position + timeStepSize * nextPrevVelocity;*/
+
+			vec3 nextPrevVelocity(0.0f, 0.0f, 0.0f);
+			vec3 nextCurrentVelocity = current.currentVelocity + timeStepSize * acceleration;
+			vec3 nextPosition = current.position + timeStepSize * (current.currentVelocity + timeStepSize * acceleration);
 
 			Particle newParticle(nextPosition, nextCurrentVelocity, nextPrevVelocity, current.density, current.pressure);
 
-			if (cube.collision(current.position, newParticle.position)) {
+			/*if (cube.collision(current.position, newParticle.position)) {
 			  //cout << "collision"  << endl;
 			  pair<float, vec3> timeNormal = cube.collisionTimeNormal(current.position, newParticle.position);
 			  float timeStep = timeStepSize * timeNormal.first;
@@ -262,9 +266,11 @@ void FluidSimulation::elapseTimeGrid() {
 			  //cout << "Collision Velocity " << newVelocity.x << " " << newVelocity.y << " " << newVelocity.z << endl;;
 			  newParticle.currentVelocity = newVelocity;
 			  newParticle.position = collisionPoint + (timeStepSize - timeStep) * newParticle.currentVelocity;
-			  newParticle.prevVelocity = newParticle.currentVelocity - 0.5f * timeStep * acceleration;
+			  //newParticle.prevVelocity = newParticle.currentVelocity - 0.5f * timeStep * acceleration;
 			  //cout << "newPosition " << newParticle.position.x << " " << newParticle.position.y << " " << newParticle.position.z << endl;
-			}
+			}*/
+
+			  cube.handleCollisions(newParticle);
 
 			int newIndex = mapToIndex(newParticle);
 			if (newIndex < 0 || newIndex >= gridCells.size())

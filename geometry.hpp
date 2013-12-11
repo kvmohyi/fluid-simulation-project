@@ -40,6 +40,7 @@ public:
 	bool collision(vec3 start, vec3 end);
         pair<float, vec3> collisionTimeNormal(vec3 start, vec3 end);
         float rayTriangle(vec3 start, vec3 end, Triangle triangle);
+        void handleCollisions(Particle& particle);
 };
 
 #endif
