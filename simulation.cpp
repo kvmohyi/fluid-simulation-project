@@ -451,6 +451,28 @@ void FluidSimulation::drawTest(int dimension, int version) {
 	  }
 	  	    
 	}
+	else if (version == 4) {
+	  vec3 initVelocity = vec3(0.0, 0.0, 0.0);
+	  float volume = (sideMax * sideMax * sideMax * 0.2) * 2.0;
+	  particleMass = restDensity * volume / numParticles;
+	  localRadius = idealLocalRadius3D(volume);
+	  reinitGridCells();
+	  drawWaterShape(numParticles / 2.0f, -1.0 * sideMax, -1.0 * sideMax, -1.0 * sideMax, -0.8 * sideMax, sideMax, sideMax, initVelocity);
+	  drawWaterShape(numParticles / 2.0f, 0.8 * sideMax, -1.0 * sideMax, -1.0 * sideMax, sideMax, sideMax, sideMax, initVelocity);
+	}
+	else if(version == 5) {
+	  float poolXZSize = worldSize;
+	  float poolYSize = worldSize / 8.0;
+	  vec3 initVelocity = vec3(0.0f, 0.0f, 0.0f);
+	  float poolVolume = poolXZSize * poolXZSize * poolYSize;
+	  float totalVolume = poolVolume;
+	  int particlesInPool = numParticles;
+
+	  localRadius = idealLocalRadius3D(totalVolume);
+	  particleMass = totalVolume * restDensity / numParticles;
+	  reinitGridCells();  
+	  drawWaterShape(particlesInPool, -worldSize / 2.0, -worldSize / 2.0, -worldSize / 2.0, worldSize / 2.0, -worldSize / 2.0 + poolYSize / 2.0, worldSize / 2.0, initVelocity);
+	}
 	else if (version == 6) {
 		float sideSize = 1.0;
 		float volume = sideSize * sideSize * sideSize;
