@@ -47,7 +47,7 @@ RigidBody::RigidBody(float l, float h, float d){
 }
 
 void RigidBody::handleCollisions(Particle& particle) {
-  float dampening = 0.5f;
+  float dampening = 0.3f;
   if (particle.position.x < -length / 2.0) {
     particle.position.x = -length / 2.0 + (-length / 2.0 - particle.position.x);
     particle.velocity.x = -1.0 * dampening * particle.velocity.x;

@@ -14,7 +14,6 @@
 using namespace std;
 using namespace glm;
 
-float dampFactor = 0.5f;
 #define PI 3.14159265f
 
 void FluidSimulation::instantiateFromFile(string file) {
@@ -90,7 +89,7 @@ void FluidSimulation::instantiateFromFile(string file) {
 
 FluidSimulation::FluidSimulation(string file) {
 	gravity = vec3(0.0f, -9.8f, 0.0);
-	worldSize = 2.0f;
+	worldSize = 2.0;
 	timeStepSize = 0.01;
 	numIterations = 0;
 	//numParticles = 0;
@@ -340,11 +339,11 @@ void FluidSimulation::drawWaterShape(int n, float xStart, float yStart, float zS
 		float ratioZ = depth / length;
 		float particlesLength = pow((float) n / (ratioY * ratioZ), 1.0f / 3.0f);
 		float spacing = length / particlesLength;
-		for(float x = xStart; x < xEnd; x += spacing)
+		for(float x = xStart + spacing / 2.0; x < xEnd; x += spacing)
 		{	
-			for(float y = yStart; y < yEnd; y += spacing)
+			for(float y = yStart + spacing / 2.0; y < yEnd; y += spacing)
 			{	
-				for(float z = zStart; z < zEnd; z += spacing)
+				for(float z = zStart + spacing / 2.0; z < zEnd; z += spacing)
 				{
 					vec3 position = vec3(x, y, z);
 					Particle particle = Particle(position, velocity);
