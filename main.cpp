@@ -66,8 +66,8 @@ void myReshape(int w, int h) {
   // glOrtho(-1, 1 + (w-400)/200.0 , -1 -(h-400)/200.0, 1, 1, -1); // resize type = add
   // glOrtho(-w/400.0, w/400.0, -h/400.0, h/400.0, 1, -1); // resize type = center
 
-  glOrtho(-1, 1, -1, 1, 1, -1);    // resize type = stretch
-  //gluPerspective(90.0, (float)viewport.w/(float)viewport.h, 0.001, 1000.0);
+  //glOrtho(-1, 1, -1, 1, 1, -1);    // resize type = stretch
+  gluPerspective(50, (float)viewport.w/(float)viewport.h, 0.001, 1000.0);
   //gluLookAt(0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
   //------------------------------------------------------------
 }
@@ -105,8 +105,8 @@ void myDisplay2D() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glPushMatrix();
-      //glTranslatef(0.0f, 0.0f, -0.5f);
-
+      glTranslatef(0.0f, 0.0f, -2.0f);
+      glRotatef(10.0, 1.0, 0.0, 0.0);
       glScalef(1.0f / fluidsim->worldSize, 1.0f / fluidsim->worldSize, 1.0f / fluidsim->worldSize);
 
       vector<vector<Particle> >& gridCells = fluidsim->particleList();

@@ -401,7 +401,7 @@ void FluidSimulation::drawTest(int dimension, int version) {
 
 			localRadius = idealLocalRadius3D(totalVolume);
 			particleMass = totalVolume * restDensity / numParticles;
-			reinitGridCellls();
+			reinitGridCells();
 
 			// Draw the cube
 			drawWaterShape(particlesInCube, -cubeSize / 2.0, worldSize / 6.0, -cubeSize / 2.0, cubeSize / 2.0, worldSize / 2.0, cubeSize / 2.0, initVelocity);
@@ -422,7 +422,7 @@ void FluidSimulation::drawTest(int dimension, int version) {
 
 			localRadius = idealLocalRadius2D(totalArea);
 			particleMass = totalArea * restDensity / numParticles;
-			reinitGridCellls();
+			reinitGridCells();
 
 						// Draw the cube
 			drawWaterShape(particlesInCube, -cubeSize / 2.0, worldSize / 6.0, 0.0, cubeSize / 2.0, worldSize / 2.0, 0.0, initVelocity);
@@ -444,7 +444,7 @@ void FluidSimulation::drawTest(int dimension, int version) {
 	  else {
 	    float area = pow(worldSize / 3.0f, 2.0) * 2;
 	    particleMass = restDensity * area / numParticles;
-	    localRadius = ideaLocalRadius2D(area);
+	    localRadius = idealLocalRadius2D(area);
 	    reinitGridCells();
 	    drawWaterShape(numParticles / 2.0f, -1.0 * sideMax, 0.5 * sideMax, 0.0, -0.5 * sideMax, 1.0 * sideMax, 0.0, initVelocity2);
 	    drawWaterShape(numParticles / 2.0f, 0.5 * sideMax, 0.5 * sideMax, 0.0, 1.0 * sideMax, 1.0 * sideMax, 0.0, initVelocity1);
@@ -458,7 +458,7 @@ void FluidSimulation::drawTest(int dimension, int version) {
 		float stepSize = sideSize / pow(maxParticles, 1.0 / 3.0);
 		particleMass = volume * restDensity / maxParticles;
 		localRadius = idealLocalRadius3D(volume);
-		reinitGridCellls();
+		reinitGridCells();
 		for (float x = -worldSize / 2.0; x < 0.0; x += stepSize) {
 			for (float y = -worldSize / 2.0; y < 0.0; y += stepSize) {
 				for (float z = -worldSize / 2.0; z < 0.0; z += stepSize) {
@@ -536,7 +536,7 @@ void FluidSimulation::printParams() {
 	cout << "dimensions: " << dimensions << endl;
 	cout << "tensionThreshold: " << tensionThreshold << endl;
 	cout << "tensionConstant: " << tensionConstant << endl;
-	cout << "kernelX" << kernelX << endl;
+	cout << "kernelX: " << kernelX << endl;
 }
 
 double FluidSimulation::sphereRadius(Particle& particle) {
