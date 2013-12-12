@@ -107,7 +107,7 @@ void myDisplay2D() {
     glPushMatrix();
       //glTranslatef(0.0f, 0.0f, -0.5f);
 
-      //glScalef(0.5f / fluidsim->worldSize, 0.5f / fluidsim->worldSize, 0.5f / fluidsim->worldSize);
+      glScalef(1.0f / fluidsim->worldSize, 1.0f / fluidsim->worldSize, 1.0f / fluidsim->worldSize);
 
       vector<vector<Particle> >& gridCells = fluidsim->particleList();
 

@@ -48,7 +48,8 @@ public:
     void drawTest(int dimension, int version);
     void printParams();
     double sphereRadius(Particle& particle);
-    float idealLocalRadius(float volume, int numParticles, int x);
+    float idealLocalRadius3D(float volume);
+    float idealLocalRadius2D(float area);
     void reinitGridCellls();
 };
 
