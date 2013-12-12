@@ -92,7 +92,42 @@ void initScene(){
   glEnable(GL_DEPTH_TEST);
   //myReshape(viewport.w,viewport.h);
 }
+void drawCube(RigidBody& rigidBody) {
+  glBegin(GL_QUADS);
+  float sideLength = fluidsim->worldSize / 2.0;
+      // front
+  glVertex3f(-1.0 * sideLength, -1.0 * sideLength, sideLength);
+  glVertex3f(sideLength, -1.0 * sideLength , sideLength);
+  glVertex3f(sideLength, sideLength, sideLength);
+  glVertex3f(-1.0 * sideLength, sideLength, sideLength);
+      // back
+  glVertex3f(-1.0 * sideLength, -1.0 * sideLength, -1.0 * sideLength);
+  glVertex3f(sideLength, -1.0 * sideLength , -1.0 * sideLength);
+  glVertex3f(sideLength, sideLength, -1.0 * sideLength);
+  glVertex3f(-1.0 * sideLength, sideLength,-1.0 * sideLength);
+      // right
+  glVertex3f(sideLength, -1.0 * sideLength, sideLength);
+  glVertex3f(sideLength, -1.0 * sideLength, -1.0f * sideLength);
+  glVertex3f(sideLength, sideLength, -1.0f * sideLength);
+  glVertex3f(sideLength, sideLength, sideLength);
+      // left
+  glVertex3f(-1.0 * sideLength, -1.0 * sideLength, sideLength);
+  glVertex3f(-1.0 * sideLength, -1.0 * sideLength, -1.0 * sideLength);
+  glVertex3f(-1.0 * sideLength, sideLength, -1.0 * sideLength);
+  glVertex3f(-1.0 * sideLength, sideLength, sideLength);
+      // top
+  glVertex3f(sideLength, sideLength, sideLength);
+  glVertex3f(-1.0 * sideLength, sideLength, sideLength);
+  glVertex3f(-1.0 * sideLength, sideLength, -1.0 * sideLength);
+  glVertex3f(sideLength, sideLength, -1.0 * sideLength);
 
+      // bottom
+  glVertex3f(sideLength, -1.0 * sideLength, sideLength);
+  glVertex3f(-1.0 * sideLength, -1.0 * sideLength, sideLength);
+  glVertex3f(-1.0 * sideLength, -1.0 * sideLength, -1.0 * sideLength);
+  glVertex3f(sideLength, -1.0 * sideLength, -1.0 * sideLength);
+  glEnd();
+}
 
 //***************************************************
 // function that does the actual drawing
@@ -105,9 +140,11 @@ void myDisplay2D() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glPushMatrix();
-      glTranslatef(0.0f, 0.0f, -2.0f);
-      glRotatef(10.0, 1.0, 0.0, 0.0);
-      glScalef(1.0f / fluidsim->worldSize, 1.0f / fluidsim->worldSize, 1.0f / fluidsim->worldSize);
+    glTranslatef(0.0f, 0.0f, -2.0f);
+    glRotatef(10.0, 1.0, 0.0, 0.0);
+    glScalef(1.0f / fluidsim->worldSize, 1.0f / fluidsim->worldSize, 1.0f / fluidsim->worldSize);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    drawCube(fluidsim->cube);
 
       vector<vector<Particle> >& gridCells = fluidsim->particleList();
 
@@ -138,40 +175,7 @@ void myDisplay2D() {
   }
 }
 
-void drawCube(RigidBody& rigidBody) {
-  glBegin(GL_QUADS);
-      // front
-      glVertex3f(0.0f, 0.0f, 0.0f);
-      glVertex3f(1.0f, 0.0f, 0.0f);
-      glVertex3f(1.0f, 1.0f, 0.0f);
-      glVertex3f(0.0f, 1.0f, 0.0f);
-      // back
-      glVertex3f(0.0f, 0.0f, -1.0f);
-      glVertex3f(1.0f, 0.0f, -1.0f);
-      glVertex3f(1.0f, 1.0f, -1.0f);
-      glVertex3f(0.0f, 1.0f, -1.0f);
-      // right
-      glVertex3f(1.0f, 0.0f, 0.0f);
-      glVertex3f(1.0f, 0.0f, -1.0f);
-      glVertex3f(1.0f, 1.0f, -1.0f);
-      glVertex3f(1.0f, 1.0f, 0.0f);
-      // left
-      glVertex3f(0.0f, 0.0f, 0.0f);
-      glVertex3f(0.0f, 0.0f, -1.0f);
-      glVertex3f(0.0f, 1.0f, -1.0f);
-      glVertex3f(0.0f, 1.0f, 0.0f);
-      // top
-      glVertex3f(0.0f, 1.0f, 0.0f);
-      glVertex3f(1.0f, 1.0f, 0.0f);
-      glVertex3f(1.0f, 1.0f, -1.0f);
-      glVertex3f(0.0f, 1.0f, -1.0f);
-      // bottom
-      glVertex3f(0.0f, 0.0f, 0.0f);
-      glVertex3f(1.0f, 0.0f, 0.0f);
-      glVertex3f(1.0f, 0.0f, -1.0f);
-      glVertex3f(0.0f, 0.0f, -1.0f);
-  glEnd();
-}
+
 
 //****************************************************
 // called by glut when there are no messages to handle
