@@ -50,7 +50,7 @@ public:
     double sphereRadius(Particle& particle);
     float idealLocalRadius3D(float volume);
     float idealLocalRadius2D(float area);
-    void reinitGridCellls();
+    void reinitGridCells();
 };
 
 
