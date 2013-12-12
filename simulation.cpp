@@ -83,6 +83,9 @@ void FluidSimulation::instantiateFromFile(string file) {
 			else if(!splitline[0].compare("kernel_x")) {
 				kernelX = atof(splitline[1].c_str());
 			}
+			else if(!splitline[0].compare("max_iterations")) {
+				maxIterations = atof(splitline[1].c_str());
+			}
 		}
 		inpfile.close();
 	}
@@ -311,7 +314,7 @@ int FluidSimulation::mapToIndex(int x, int y, int z) {
 }
   
 
-void FluidSimulation::drawWaterShape(int n, float xStart, float yStart, float zStart, float xEnd, float yEnd, float zEnd, vec3 velocity){
+int FluidSimulation::drawWaterShape(int n, float xStart, float yStart, float zStart, float xEnd, float yEnd, float zEnd, vec3 velocity){
 	float length = xEnd - xStart;
 	float width = yEnd- yStart;
 	float depth = zEnd - zStart;
@@ -334,28 +337,42 @@ void FluidSimulation::drawWaterShape(int n, float xStart, float yStart, float zS
 		}
 	}						
 	else {		
-		float volume = length * width * depth;
+	        float volume = length * width * depth;
+		//cout << "volume " << volume << endl;
+		int counter = 0;
 		//particleMass = volume * restDensity / n;
 		float ratioY = width / length;
+		//cout << "ratioY " << ratioY << endl;
 		float ratioZ = depth / length;
+		//cout << "ratioZ " << ratioZ << endl;	    
 		float particlesLength = pow((float) n / (ratioY * ratioZ), 1.0f / 3.0f);
-		float spacing = length / particlesLength;
-		for(float x = xStart + spacing / 2.0; x < xEnd; x += spacing)
+		//cout << "particlesLength " << particlesLength << endl;
+		float spacingX = length / particlesLength;
+		/*
+		cout << "spacingX" << spacingX << endl;
+		cout << "ParticlesX " << length / spacingX << endl;
+		cout << "ParticlesY " << width / spacingX << endl;
+		cout << "ParticlesZ " << depth / spacingX << endl;*/
+		for(float x = xStart; x < xEnd; x += spacingX)
 		{	
-			for(float y = yStart + spacing / 2.0; y < yEnd; y += spacing)
+			for(float y = yStart; y < yEnd; y += spacingX)
 			{	
-				for(float z = zStart + spacing / 2.0; z < zEnd; z += spacing)
+				for(float z = zStart; z < zEnd; z += spacingX)
 				{
 					vec3 position = vec3(x, y, z);
 					Particle particle = Particle(position, velocity);
 					int index = mapToIndex(particle);
 					gridCells[index].push_back(particle);
+					counter++;
 				}
 			}
 		}
+		//cout << "Num Particles " << counter << endl;
+		return counter;
 	}
-
+	
 	numIterations++;
+	return 0;
 }
 void FluidSimulation::drawTest(int dimension, int version) {
 	float sideMax = worldSize / 2.0f;
@@ -373,10 +390,11 @@ void FluidSimulation::drawTest(int dimension, int version) {
 	  vec3 initVelocity = vec3(0.0, 0.0, 0.0);
 	  if (dimensions == 3) {
 	    float volume = pow(sideMax, 3.0);
-	    particleMass = restDensity * volume / numParticles;
+	    //particleMass = restDensity * volume / numParticles;
 	    localRadius = idealLocalRadius3D(volume);
 	    reinitGridCells();
-	    drawWaterShape(numParticles, -1.0 * sideMax, -1.0 * sideMax, -1.0 * sideMax, 0.0, 0.0, 0.0, initVelocity);
+	    numParticles = drawWaterShape(numParticles, -1.0 * sideMax, -1.0 * sideMax, -1.0 * sideMax, 0.0, 0.0, 0.0, initVelocity);
+	    particleMass = restDensity * volume / numParticles;
 	  }
 	  else {
 	    float area = pow(sideMax, 2.0);
@@ -400,13 +418,15 @@ void FluidSimulation::drawTest(int dimension, int version) {
 			int particlesInPool = poolVolume / totalVolume * numParticles;
 
 			localRadius = idealLocalRadius3D(totalVolume);
-			particleMass = totalVolume * restDensity / numParticles;
+			//particleMass = totalVolume * restDensity / numParticles;
 			reinitGridCells();
 
 			// Draw the cube
-			drawWaterShape(particlesInCube, -cubeSize / 2.0, worldSize / 6.0, -cubeSize / 2.0, cubeSize / 2.0, worldSize / 2.0, cubeSize / 2.0, initVelocity);
+			int particles1 = drawWaterShape(particlesInCube, -cubeSize / 2.0, worldSize / 6.0, -cubeSize / 2.0, cubeSize / 2.0, worldSize / 2.0, cubeSize / 2.0, initVelocity);
 			// Draw the pool
-			drawWaterShape(particlesInPool, -worldSize / 2.0, -worldSize / 2.0, -worldSize / 2.0, worldSize / 2.0, -worldSize / 2.0 + poolYSize / 2.0, worldSize / 2.0, initVelocity);
+			int particles2 = drawWaterShape(particlesInPool, -worldSize / 2.0, -worldSize / 2.0, -worldSize / 2.0, worldSize / 2.0, -worldSize / 2.0 + poolYSize / 2.0, worldSize / 2.0, initVelocity);
+			numParticles = particles1 + particles2;
+			particleMass = restDensity * totalVolume / numParticles;
 		}
 		else { // dimensions == 2
 			float cubeSize = worldSize / 3.0;
@@ -435,11 +455,13 @@ void FluidSimulation::drawTest(int dimension, int version) {
 	  vec3 initVelocity2 = vec3(1.0f, 0.0f, 0.0f);
 	  if(dimensions == 3){
 	    float volume = pow(worldSize / 3.0f, 3.0) * 2;
-	    particleMass = restDensity * volume / numParticles;
+	    //particleMass = restDensity * volume / numParticles;
 	    localRadius = idealLocalRadius3D(volume);
 	    reinitGridCells();
-	    drawWaterShape(numParticles / 2.0f, -1.0 * sideMax, 0.5 * sideMax, -0.25 * sideMax, -0.5 * sideMax, 1.0 * sideMax, 0.25 * sideMax, initVelocity2);
-	    drawWaterShape(numParticles / 2.0f, 0.5 * sideMax, 0.5 * sideMax, -0.25 * sideMax, 1.0 * sideMax, 1.0 * sideMax, 0.25 * sideMax, initVelocity1);
+	    int particles1 = drawWaterShape(numParticles / 2.0f, -1.0 * sideMax, 0.5 * sideMax, -0.25 * sideMax, -0.5 * sideMax, 1.0 * sideMax, 0.25 * sideMax, initVelocity2);
+	    int particles2 = drawWaterShape(numParticles / 2.0f, 0.5 * sideMax, 0.5 * sideMax, -0.25 * sideMax, 1.0 * sideMax, 1.0 * sideMax, 0.25 * sideMax, initVelocity1);
+	    numParticles = particles1 + particles2;
+	    particleMass = restDensity * volume / numParticles;
 	  }
 	  else {
 	    float area = pow(worldSize / 3.0f, 2.0) * 2;
@@ -454,11 +476,13 @@ void FluidSimulation::drawTest(int dimension, int version) {
 	else if (version == 4) {
 	  vec3 initVelocity = vec3(0.0, 0.0, 0.0);
 	  float volume = (sideMax * sideMax * sideMax * 0.2) * 2.0;
-	  particleMass = restDensity * volume / numParticles;
+	  //particleMass = restDensity * volume / numParticles;
 	  localRadius = idealLocalRadius3D(volume);
 	  reinitGridCells();
-	  drawWaterShape(numParticles / 2.0f, -1.0 * sideMax, -1.0 * sideMax, -1.0 * sideMax, -0.8 * sideMax, sideMax, sideMax, initVelocity);
-	  drawWaterShape(numParticles / 2.0f, 0.8 * sideMax, -1.0 * sideMax, -1.0 * sideMax, sideMax, sideMax, sideMax, initVelocity);
+	  int particles1 = drawWaterShape(numParticles / 2.0f, -1.0 * sideMax, -1.0 * sideMax, -1.0 * sideMax, -0.8 * sideMax, sideMax, sideMax, initVelocity);
+	  int particles2 = drawWaterShape(numParticles / 2.0f, 0.8 * sideMax, -1.0 * sideMax, -1.0 * sideMax, sideMax, sideMax, sideMax, initVelocity);
+	  numParticles = particles1 + particles2;
+	  particleMass = restDensity * volume / numParticles;
 	}
 	else if(version == 5) {
 	  float poolXZSize = worldSize;
@@ -469,9 +493,10 @@ void FluidSimulation::drawTest(int dimension, int version) {
 	  int particlesInPool = numParticles;
 
 	  localRadius = idealLocalRadius3D(totalVolume);
-	  particleMass = totalVolume * restDensity / numParticles;
+	  //particleMass = totalVolume * restDensity / numParticles;
 	  reinitGridCells();  
-	  drawWaterShape(particlesInPool, -worldSize / 2.0, -worldSize / 2.0, -worldSize / 2.0, worldSize / 2.0, -worldSize / 2.0 + poolYSize / 2.0, worldSize / 2.0, initVelocity);
+	  numParticles = drawWaterShape(particlesInPool, -worldSize / 2.0, -worldSize / 2.0, -worldSize / 2.0, worldSize / 2.0, -worldSize / 2.0 + poolYSize / 2.0, worldSize / 2.0, initVelocity);
+	  particleMass = restDensity * totalVolume / numParticles;
 	}
 	else if (version == 6) {
 		float sideSize = 1.0;
