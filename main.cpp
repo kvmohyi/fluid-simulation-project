@@ -100,8 +100,8 @@ void initScene(){
   glLightfv(GL_LIGHT0, GL_DIFFUSE, lightDiffuse);
   //glLightfv(GL_LIGHT0, GL_SPECULAR, lightSpecular);
 
-  GLfloat mat_ambient[] = {0.0f, 0.0f, 1.0f, 1.0f};
-  GLfloat mat_diffuse[] = {0.0f, 0.0f, 1.0f, 1.0f};
+  GLfloat mat_ambient[] = {1.0f, 1.0f, 1.0f, 1.0f};
+  GLfloat mat_diffuse[] = {1.0f, 1.0f, 1.0f, 1.0f};
   //GLfloat materialSpecular[] = {1.0, 1.0, 1.0, 1.0};
   //GLfloat materialShininess[] = {40, 0};
 
@@ -165,7 +165,7 @@ void myDisplay2D() {
   glLoadIdentity();
   glPushMatrix();
   glTranslatef(0.0f, 0.0f, -2.0f);
-  glRotatef(0.0, 1.0, 0.0, 0.0);
+  glRotatef(15.0, 1.0, 0.0, 0.0);
   glScalef(1.0f / fluidsim->worldSize, 1.0f / fluidsim->worldSize, 1.0f / fluidsim->worldSize);
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   drawCube(fluidsim->cube);
@@ -191,7 +191,7 @@ void myDisplay2D() {
   glPopMatrix();
 
   #if SAVE_IMAGE
-    if (fluidsim->numIterations % 4 == 0) {
+    if ((fluidsim->numIterations - 1) % 4 == 0 && fluidsim->numIterations > 0) {
       std::stringstream ss;
       if (frameNumber < 10)
         ss << "results/test" << fluidsim->testVersion << "/frame000" << frameNumber++ << ".png";
