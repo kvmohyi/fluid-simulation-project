@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <sstream>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -20,8 +21,7 @@
 #include <time.h>
 #include <math.h>
 
-//#include <FreeImage.h>
-
+#include <FreeImage.h>
 #include "simulation.hpp"
 
 #ifdef _WIN32
@@ -31,6 +31,7 @@ static struct timeval lastTime;
 #endif
 
 #define WAIT_KEY true
+#define SAVE_IMAGE true
 
 using namespace std;
 
@@ -49,6 +50,7 @@ class Viewport {
 Viewport viewport;
 FluidSimulation* fluidsim = NULL;
 bool continueSimulation = false;
+int frameNumber = 0;
 
 //****************************************************
 // reshape viewport if the window is resized
@@ -135,46 +137,69 @@ void drawCube(RigidBody& rigidBody) {
 // function that does the actual drawing
 //***************************************************
 void myDisplay2D() {
-    //if (continueSimulation) {
-    if (true) {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  #if SAVE_IMAGE
+    BYTE* pixels = new BYTE[ 3 * viewport.w * viewport.h];
+  #endif
 
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glPushMatrix();
-    glTranslatef(0.0f, 0.0f, -2.0f);
-    glRotatef(10.0, 1.0, 0.0, 0.0);
-    glScalef(1.0f / fluidsim->worldSize, 1.0f / fluidsim->worldSize, 1.0f / fluidsim->worldSize);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    drawCube(fluidsim->cube);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-      vector<vector<Particle> >& gridCells = fluidsim->particleList();
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  glPushMatrix();
+  glTranslatef(0.0f, 0.0f, -2.0f);
+  glRotatef(0.0, 1.0, 0.0, 0.0);
+  glScalef(1.0f / fluidsim->worldSize, 1.0f / fluidsim->worldSize, 1.0f / fluidsim->worldSize);
+  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  drawCube(fluidsim->cube);
 
-      for (size_t cell = 0; cell < gridCells.size(); cell++) {
-        for (size_t i = 0; i < gridCells[cell].size(); i++) {
-          #if false
-          cout << "Iteration " << fluidsim->numIterations << ", Time " << fluidsim->numIterations * fluidsim->timeStepSize << endl;
-          cout << "Position: " << gridCells[cell][i].position.x << ", " << gridCells[cell][i].position.y << ", " << gridCells[cell][i].position.z << endl;
-          cout << "Velocity: " << gridCells[cell][i].velocity.x << ", " << gridCells[cell][i].velocity.y << ", " << gridCells[cell][i].velocity.z << endl;
-          cout << "Acceleration: " << gridCells[cell][i].acceleration.x << ", " << gridCells[cell][i].acceleration.y << ", " << gridCells[cell][i].acceleration.z << endl;
-          cout << endl;
-          #endif
-          glPushMatrix();
-            glTranslatef(gridCells[cell][i].position.x, gridCells[cell][i].position.y, gridCells[cell][i].position.z);
-            glutSolidSphere(fluidsim->sphereRadius(gridCells[cell][i]), 20, 20);
-          glPopMatrix();
-        }
-      }
+  vector<vector<Particle> >& gridCells = fluidsim->particleList();
 
-    glPopMatrix();
-
-    glFlush();
-    glutSwapBuffers();
-
-    fluidsim->elapseTimeGrid();
-    //cout << "derp" << endl;
-    continueSimulation = false;
+  for (size_t cell = 0; cell < gridCells.size(); cell++) {
+    for (size_t i = 0; i < gridCells[cell].size(); i++) {
+      #if false
+      cout << "Iteration " << fluidsim->numIterations << ", Time " << fluidsim->numIterations * fluidsim->timeStepSize << endl;
+      cout << "Position: " << gridCells[cell][i].position.x << ", " << gridCells[cell][i].position.y << ", " << gridCells[cell][i].position.z << endl;
+      cout << "Velocity: " << gridCells[cell][i].velocity.x << ", " << gridCells[cell][i].velocity.y << ", " << gridCells[cell][i].velocity.z << endl;
+      cout << "Acceleration: " << gridCells[cell][i].acceleration.x << ", " << gridCells[cell][i].acceleration.y << ", " << gridCells[cell][i].acceleration.z << endl;
+      cout << endl;
+      #endif
+      glPushMatrix();
+        glTranslatef(gridCells[cell][i].position.x, gridCells[cell][i].position.y, gridCells[cell][i].position.z);
+        glutSolidSphere(fluidsim->sphereRadius(gridCells[cell][i]), 20, 20);
+      glPopMatrix();
+    }
   }
+
+  glPopMatrix();
+
+  #if SAVE_IMAGE
+    if (fluidsim->numIterations % 4 == 0) {
+      std::stringstream ss;
+      if (frameNumber < 10)
+        ss << "results/test" << fluidsim->testVersion << "/frame00" << frameNumber++ << ".png";
+      else if (frameNumber < 100)
+        ss << "results/test" << fluidsim->testVersion << "/frame0" << frameNumber++ << ".png";
+      else
+        ss << "results/test" << fluidsim->testVersion << "/frame" << frameNumber++ << ".png";
+      string file = ss.str();
+      cout << file << endl;
+      glReadPixels(0, 0, viewport.w, viewport.h, GL_BGR, GL_UNSIGNED_BYTE, pixels);
+      FIBITMAP* image = FreeImage_ConvertFromRawBits(pixels, viewport.w, viewport.h, 3 * viewport.w, 24, 0xFF0000, 0x00FF00, 0x0000FF, false);
+      FreeImage_Save(FIF_PNG, image, file.c_str(), 0);
+      FreeImage_Unload(image);
+      delete [] pixels;
+    }
+  #endif
+
+  glFlush();
+  glutSwapBuffers();
+
+  if (fluidsim->numIterations >= 240)
+    exit(0);
+
+  fluidsim->elapseTimeGrid();
+  //cout << "derp" << endl;
+  continueSimulation = false;
 }
 
 
@@ -198,6 +223,7 @@ void keyPressed (unsigned char key, int x, int y) {
 // the usual stuff, nothing exciting here
 //****************************************************
 int main(int argc, char *argv[]) {
+  FreeImage_Initialise();
   string file = argv[1];
   fluidsim = new FluidSimulation(file);
 
@@ -223,6 +249,8 @@ int main(int argc, char *argv[]) {
   glutIdleFunc(myFrameMove);                   // function to run when not handling any other task
   glutKeyboardFunc(keyPressed);
   glutMainLoop();                              // infinite loop that will keep drawing and resizing and whatever else
+
+  FreeImage_DeInitialise();
 
   return 0;
 }
