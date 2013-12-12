@@ -49,7 +49,7 @@ public:
     void printParams();
     double sphereRadius(Particle& particle);
     float idealLocalRadius(float volume, int numParticles, int x);
-    void reinitGridCellls();
+    void reinitGridCells();
 };
 
 
