@@ -80,18 +80,36 @@ void myReshape(int w, int h) {
 //****************************************************
 void initScene(){
   glClearColor(1.0f, 1.0f, 1.0f, 0.0f); // Clear to black, fully transparent
+  glClearDepth(1.0);
   glShadeModel(GL_SMOOTH);
+
+  GLfloat lightAmbient[] = {0.0, 0.0, 0.0, 1.0};
+  GLfloat lightDiffuse[] = {0.5, 0.5, 0.5, 1.0};
+  //GLfloat lightSpecular[] = {0.5, 0.5, 0.5, 1.0};
+  GLfloat lightPosition[] = {10, 10, 10,0};
+  
+  glEnable(GL_LIGHTING); 
+  glEnable(GL_LIGHT0);
+  glEnable(GL_DEPTH_TEST);
+
+  glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 0);
+  glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
+  glLightfv(GL_LIGHT0, GL_AMBIENT, lightAmbient);
+  glLightfv(GL_LIGHT0, GL_DIFFUSE, lightDiffuse);
+  //glLightfv(GL_LIGHT0, GL_SPECULAR, lightSpecular);
 
   GLfloat mat_ambient[] = {0.0f, 0.0f, 1.0f, 1.0f};
   GLfloat mat_diffuse[] = {0.0f, 0.0f, 1.0f, 1.0f};
-  GLfloat light_position[] = {0.0f, 10.0f, 0.0f};
+  //GLfloat materialSpecular[] = {1.0, 1.0, 1.0, 1.0};
+  //GLfloat materialShininess[] = {40, 0};
+
+  //GLfloat light_position[] = {0.0f, 10.0f, 0.0f};
   glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
   glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
-  glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+  // glMaterialfv(GL_FRONT, GL_SPECULAR, materialSpecular);
+  // glMaterialfv(GL_FRONT, GL_SHININESS, materialShininess);
 
-  glEnable(GL_LIGHTING);
-  glEnable(GL_LIGHT0);
-  glEnable(GL_DEPTH_TEST);
+  
   //myReshape(viewport.w,viewport.h);
 }
 void drawCube(RigidBody& rigidBody) {
@@ -205,7 +223,7 @@ int main(int argc, char *argv[]) {
   glutInit(&argc, argv);
 
   //This tells glut to use a double-buffered window with red, green, and blue channels 
-  glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
+  glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
 
   // Initalize theviewport size
   viewport.w = 800;
