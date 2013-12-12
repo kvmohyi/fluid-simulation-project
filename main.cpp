@@ -20,6 +20,8 @@
 #include <time.h>
 #include <math.h>
 
+//#include <FreeImage.h>
+
 #include "simulation.hpp"
 
 #ifdef _WIN32

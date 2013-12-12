@@ -15,6 +15,7 @@ using namespace std;
 using namespace glm;
 
 #define PI 3.14159265f
+#define SAVE_IMAGE true;
 
 void FluidSimulation::instantiateFromFile(string file) {
 	std::ifstream inpfile(file.c_str());
@@ -217,7 +218,7 @@ void FluidSimulation::elapseTimeGrid() {
 			}
 			// else leave it as the zero vector
 
-			acceleration = (current.density * gravity + pressureForce /*+ viscosityForce + surfaceTensionForce*/) / current.density; // a at t=0
+			acceleration = (current.density * gravity + pressureForce + viscosityForce + surfaceTensionForce) / current.density; // a at t=0
 			
 			/*vec3 oldVelocity;
 			if (numIterations > 0)
@@ -539,7 +540,7 @@ void FluidSimulation::printParams() {
 }
 
 double FluidSimulation::sphereRadius(Particle& particle) {
-	return pow(3.0 * particleMass / (4.0 * PI * particle.density), 1.0 / 3.0);
+	return 0.8f * pow(3.0 * particleMass / (4.0 * PI * particle.density), 1.0 / 3.0);
 }
 
 float FluidSimulation::idealLocalRadius3D(float volume) {
