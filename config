@@ -1,7 +1,5 @@
 world_size 1.0
-step_size 0.008333333333333333333333333333333
 max_iterations 800
-test_version 5
+test_version 0
 num_particles 5000
-dimensions 3
 kernel_x 20

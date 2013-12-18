@@ -51,6 +51,8 @@ Viewport viewport;
 FluidSimulation* fluidsim = NULL;
 bool continueSimulation = false;
 int frameNumber = 0;
+double startTime;
+double endTime;
 
 //****************************************************
 // reshape viewport if the window is resized
@@ -86,7 +88,7 @@ void initScene(){
   glShadeModel(GL_SMOOTH);
 
   GLfloat lightAmbient[] = {0.0, 0.0, 0.0, 1.0};
-  GLfloat lightDiffuse[] = {0.5, 0.5, 0.5, 1.0};
+  GLfloat lightDiffuse[] = {0.0, 0.0, 1.0, 1.0};
   //GLfloat lightSpecular[] = {0.5, 0.5, 0.5, 1.0};
   GLfloat lightPosition[] = {10, 10, 10,0};
   
@@ -98,6 +100,7 @@ void initScene(){
   glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
   glLightfv(GL_LIGHT0, GL_AMBIENT, lightAmbient);
   glLightfv(GL_LIGHT0, GL_DIFFUSE, lightDiffuse);
+  glLightModelfv(GL_LIGHT_MODEL_AMBIENT, lightAmbient);
   //glLightfv(GL_LIGHT0, GL_SPECULAR, lightSpecular);
 
   GLfloat mat_ambient[] = {1.0f, 1.0f, 1.0f, 1.0f};
@@ -165,7 +168,7 @@ void myDisplay2D() {
   glLoadIdentity();
   glPushMatrix();
   glTranslatef(0.0f, 0.0f, -2.0f);
-  glRotatef(15.0, 1.0, 0.0, 0.0);
+  glRotatef(18.0, 1.0, 0.0, 0.0);
   glScalef(1.0f / fluidsim->worldSize, 1.0f / fluidsim->worldSize, 1.0f / fluidsim->worldSize);
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   drawCube(fluidsim->cube);
@@ -214,8 +217,12 @@ void myDisplay2D() {
   glFlush();
   glutSwapBuffers();
 
-  if (fluidsim->numIterations >= fluidsim->maxIterations)
+  if (fluidsim->numIterations >= fluidsim->maxIterations) {
+    gettimeofday(&lastTime, NULL);
+    endTime = lastTime.tv_sec + lastTime.tv_usec / 1000000.0;
+    cout << "Time to complete: " << (endTime - startTime) << "s";
     exit(0);
+  }
 
   fluidsim->elapseTimeGrid();
   //cout << "derp" << endl;
@@ -268,6 +275,8 @@ int main(int argc, char *argv[]) {
   glutReshapeFunc(myReshape);                  // function to run when the window gets resized
   glutIdleFunc(myFrameMove);                   // function to run when not handling any other task
   glutKeyboardFunc(keyPressed);
+  gettimeofday(&lastTime, NULL);
+  startTime = lastTime.tv_sec + lastTime.tv_usec / 1000000.0;
   glutMainLoop();                              // infinite loop that will keep drawing and resizing and whatever else
 
   FreeImage_DeInitialise();

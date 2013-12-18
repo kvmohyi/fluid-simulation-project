@@ -101,6 +101,8 @@ FluidSimulation::FluidSimulation(string file) {
 	gasConstant = 3.0;
 	tensionConstant = 0.0728;
 	tensionThreshold = 7.065;
+	timeStepSize = 0.01;
+	dimensions = 3;
 	//Set num grids from the test cases
 	//numGrids = ceil(worldSize / (2.0f * localRadius));
 	//gridSize = worldSize / numGrids;
@@ -243,7 +245,7 @@ void FluidSimulation::elapseTimeGrid() {
 
 			vec3 nextPrevVelocity(0.0f, 0.0f, 0.0f);
 			vec3 nextCurrentVelocity = current.velocity + timeStepSize * acceleration;
-			vec3 nextPosition = current.position + timeStepSize * (current.velocity + timeStepSize * acceleration);
+			vec3 nextPosition = current.position + timeStepSize * (nextCurrentVelocity + timeStepSize * acceleration);
 
 			Particle newParticle(nextPosition, nextCurrentVelocity, current.density, current.pressure);
 
@@ -352,14 +354,23 @@ int FluidSimulation::drawWaterShape(int n, float xStart, float yStart, float zSt
 void FluidSimulation::drawTest(int dimension, int version) {
 	float sideMax = worldSize / 2.0;
 
-	if (version == 0) { // One particle
-	  	particleMass = 0.2;
-		numParticles = 1;
-
-		vec3 position1(0.0f, 0.0f, 0.0f);
-
-		Particle particle1(position1);
-		gridCells[mapToIndex(particle1)].push_back(particle1);
+	if (version == 0){
+	  vec3 initVelocity = vec3(0.0, 0.0, 0.0);
+	  if (dimensions == 3) {
+	    float volume = worldSize * worldSize * worldSize * 0.125;
+	    //particleMass = restDensity * volume / numParticles;
+	    localRadius = idealLocalRadius3D(volume);
+	    reinitGridCells();
+	    numParticles = drawWaterShape(numParticles, -1.0 * sideMax, -1.0 * sideMax, -1.0 * sideMax, 0.0, 0.0, 0.0, initVelocity);
+	    particleMass = restDensity * volume / numParticles;
+	  }
+	  else {
+	    float area = pow(sideMax, 2.0);
+	    particleMass = restDensity * area / numParticles;
+	    localRadius = idealLocalRadius2D(area);
+	    reinitGridCells();
+	    drawWaterShape(numParticles, -1.0 * sideMax, -1.0 * sideMax, 0.0, 0.0, 0.0, 0.0, initVelocity);
+	  }
 	}
 	else if (version == 1){
 	  vec3 initVelocity = vec3(0.0, 0.0, 0.0);
@@ -426,8 +437,8 @@ void FluidSimulation::drawTest(int dimension, int version) {
 		}
 	}
 	else if(version == 3) {
-	  vec3 initVelocity1 = vec3(-5.0f, 0.0f, 0.0f);
-	  vec3 initVelocity2 = vec3(5.0f, 0.0f, 0.0f);
+	  vec3 initVelocity1 = vec3(-2.0f, 0.0f, 0.0f);
+	  vec3 initVelocity2 = vec3(2.0f, 0.0f, 0.0f);
 	  if(dimensions == 3){
 	    float volume = pow(worldSize / 3.0f, 3.0) * 2;
 	    //particleMass = restDensity * volume / numParticles;
@@ -578,7 +589,7 @@ float FluidSimulation::idealLocalRadius2D(float area) {
 }
 
 void FluidSimulation::reinitGridCells() {
-	numGrids = ceil(worldSize / (2.0f * localRadius));
+	numGrids = ceil(worldSize / (localRadius));
 	gridSize = worldSize / numGrids;
 	gridCells.resize(numGrids * numGrids * numGrids);
 }
